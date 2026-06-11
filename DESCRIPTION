@@ -3,7 +3,9 @@ Type: Package
 Title: Korean NLP Package
 Version: 0.1.0
 Authors@R: c(
-    person("Jonghyeon", "Park", role = c("aut", "cre"), email = "jonghyeon@jnu.ac.kr")
+    person("Jonghyeon", "Park", role = c("aut", "cre"), email = "jonghyeon@jnu.ac.kr"),
+    person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),
+    person("Taekyung", "Kim", role = "ctb")
   )
 Description: POS Tagger and Morphological Analyzer for Korean text based research. It provides tools for corpus linguistics research such as Keystroke converter, Hangul automata, Concordance, and Mutual Information. It also provides a convenient interface for users to apply, edit and add morphological dictionary selectively. (derived from KoNLP)
 License: GPL-3
