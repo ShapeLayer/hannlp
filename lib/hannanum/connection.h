@@ -1,4 +1,4 @@
-// Derived from ChartMorphAnalyzer/Connection
+// derived from ChartMorphAnalyzer/Connection
 
 /*  Copyright 2010, 2011 Semantic Web Research Center, KAIST
 
