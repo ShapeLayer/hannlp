@@ -9,3 +9,6 @@
 }
 \value{converted tag vector}
 \description{Convert tags between KAIST and Sejong tag sets.}
+\examples{
+convertTag("K", "S", "ncn")
+}

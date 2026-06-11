@@ -11,7 +11,9 @@ files.
 HanNanum runtime dictionary and statistical data
 Copyright: Semantic Web Research Center, KAIST and respective contributors
 License: GNU General Public License, version 3 or later, as distributed with
-the HanNanum/JHanNanum materials
+the JHanNanum materials. The upstream JHanNanum distribution states that
+JHanNanum is distributed under GPLv3 and includes resources and configuration
+files as part of the distribution.
 Location: inst/modules/hannanum/inst/hannanum-data
 
 NIADic dictionary data
@@ -19,6 +21,3 @@ Copyright: National Information Society Agency and contributors
 License: Creative Commons Attribution-ShareAlike 2.0
 Location: inst/modules/niadic/NIADic/inst/dics.RData
 Source: https://github.com/haven-jeon/NIADic
-
-The package maintainer is responsible for ensuring that all bundled third-party
-materials may be redistributed by CRAN under their stated licenses.

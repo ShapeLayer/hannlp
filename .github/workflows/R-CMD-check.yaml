@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -26,7 +28,6 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      _R_CHECK_CRAN_INCOMING_REMOTE_: false
       _R_CHECK_FORCE_SUGGESTS_: false
 
     steps:
@@ -42,6 +43,15 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
+
+      - uses: r-lib/actions/setup-tinytex@v2
+
+      - name: Install system check tools
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y devscripts tidy
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -74,18 +84,274 @@ jobs:
 
       - name: R CMD check
         shell: Rscript {0}
+        if: ${{ github.event_name == 'push' }}
         run: |
           rcmdcheck::rcmdcheck(
             Sys.getenv("PKG_TARBALL"),
-            args = c("--no-manual", "--as-cran"),
+            args = c("--as-cran"),
             build_args = character(),
             error_on = "warning",
             check_dir = "check"
           )
 
-      - name: Upload check results
-        if: failure()
+      - name: R CMD check for CRAN submission
+        shell: Rscript {0}
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+        env:
+          MATRIX_OS: ${{ matrix.config.os }}
+          MATRIX_R: ${{ matrix.config.r }}
+        run: |
+          dir.create("check-summary", showWarnings = FALSE)
+
+          result <- rcmdcheck::rcmdcheck(
+            Sys.getenv("PKG_TARBALL"),
+            args = c("--as-cran"),
+            build_args = character(),
+            error_on = "never",
+            check_dir = "check"
+          )
+
+          count_items <- function(x) {
+            if (is.null(x)) return(0L)
+            if (is.data.frame(x)) return(nrow(x))
+            length(x)
+          }
+
+          errors <- count_items(result$errors)
+          warnings <- count_items(result$warnings)
+          notes <- count_items(result$notes)
+          status <- sprintf("%d errors, %d warnings, %d notes", errors, warnings, notes)
+          pkg_size <- file.info(Sys.getenv("PKG_TARBALL"))$size
+          pkg_size_mb <- sprintf("%.1f MB", pkg_size / 1024^2)
+          package_name <- read.dcf("DESCRIPTION", fields = "Package")[[1L]]
+          check_log <- file.path("check", sprintf("%s.Rcheck", package_name), "00check.log")
+
+          note_text <- if (notes > 0L) {
+            paste(capture.output(print(result$notes)), collapse = "\n")
+          } else {
+            "None"
+          }
+
+          warning_text <- if (warnings > 0L) {
+            paste(capture.output(print(result$warnings)), collapse = "\n")
+          } else {
+            "None"
+          }
+
+          error_text <- if (errors > 0L) {
+            paste(capture.output(print(result$errors)), collapse = "\n")
+          } else {
+            "None"
+          }
+
+          fragment <- c(
+            sprintf("- %s, R %s: %s", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R"), status),
+            sprintf("  - R: %s", R.version.string),
+            sprintf("  - Platform: %s", R.version$platform),
+            sprintf("  - Source package: %s", basename(Sys.getenv("PKG_TARBALL"))),
+            sprintf("  - Source package size: %s", pkg_size_mb),
+            sprintf("  - Check log: %s", check_log),
+            ""
+          )
+
+          result_row <- data.frame(
+            os = Sys.getenv("MATRIX_OS"),
+            r = Sys.getenv("MATRIX_R"),
+            r_version = R.version.string,
+            platform = R.version$platform,
+            source_package = basename(Sys.getenv("PKG_TARBALL")),
+            source_package_size = pkg_size_mb,
+            errors = errors,
+            warnings = warnings,
+            notes = notes,
+            check_log = check_log,
+            stringsAsFactors = FALSE
+          )
+
+          utils::write.table(
+            result_row,
+            file.path(
+              "check-summary",
+              sprintf("cran-comments-result-%s-%s.tsv", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R"))
+            ),
+            sep = "\t",
+            quote = FALSE,
+            row.names = FALSE
+          )
+
+          writeLines(fragment, file.path(
+            "check-summary",
+            sprintf("cran-comments-%s-%s.md", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R"))
+          ))
+
+          summary <- c(
+            sprintf("## CRAN Comments Test Result: %s / R %s", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R")),
+            "",
+            sprintf("- R CMD check result: %s", status),
+            sprintf("- R version: %s", R.version.string),
+            sprintf("- Platform: %s", R.version$platform),
+            sprintf("- Source package: `%s`", basename(Sys.getenv("PKG_TARBALL"))),
+            sprintf("- Source package size: %s", pkg_size_mb),
+            "",
+            "### Notes",
+            "```text",
+            note_text,
+            "```",
+            "",
+            "### Warnings",
+            "```text",
+            warning_text,
+            "```",
+            "",
+            "### Errors",
+            "```text",
+            error_text,
+            "```",
+            ""
+          )
+
+          writeLines(summary, file.path(
+            "check-summary",
+            sprintf("check-summary-%s-%s.md", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R"))
+          ))
+
+          github_summary <- Sys.getenv("GITHUB_STEP_SUMMARY", unset = "")
+          if (nzchar(github_summary)) {
+            cat(paste(summary, collapse = "\n"), file = github_summary, append = TRUE)
+          }
+
+          if (errors > 0L || warnings > 0L) {
+            quit(status = 1L)
+          }
+
+      - name: Upload check logs
+        if: always()
         uses: actions/upload-artifact@v5
         with:
           name: check-results-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check
+
+      - name: Upload CRAN comments fragment
+        if: ${{ always() && (github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch') }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: cran-comments-input-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check-summary
+
+  cran-submission:
+    name: CRAN submission artifact
+    needs: check
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+
+    env:
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - name: Download CRAN comments inputs
+        uses: actions/download-artifact@v5
+        with:
+          pattern: cran-comments-input-*
+          path: cran-comments-input
+          merge-multiple: true
+
+      - name: Render CRAN comments
+        shell: Rscript {0}
+        run: |
+          result_files <- list.files(
+            "cran-comments-input",
+            pattern = "^cran-comments-result-.*[.]tsv$",
+            recursive = TRUE,
+            full.names = TRUE
+          )
+          if (length(result_files) == 0L) {
+            stop("No CRAN comments result files were downloaded.", call. = FALSE)
+          }
+
+          results <- do.call(rbind, lapply(result_files, utils::read.delim, stringsAsFactors = FALSE))
+          results <- results[order(results$os, results$r), , drop = FALSE]
+
+          test_env <- sprintf(
+            "- %s, R %s (%s; %s)",
+            results$os,
+            results$r,
+            results$r_version,
+            results$platform
+          )
+
+          check_results <- sprintf(
+            "- %s, R %s: %s errors, %s warnings, %s notes",
+            results$os,
+            results$r,
+            results$errors,
+            results$warnings,
+            results$notes
+          )
+
+          check_results <- c(
+            check_results,
+            "",
+            "There were no ERRORs or WARNINGs in the GitHub Actions matrix.",
+            "Any remaining NOTE is expected for a new CRAN submission:",
+            "",
+            "```text",
+            "New submission",
+            "```"
+          )
+
+          replace_block <- function(lines, start_marker, end_marker, replacement) {
+            start <- match(start_marker, lines)
+            end <- match(end_marker, lines)
+            if (is.na(start) || is.na(end) || start >= end) {
+              stop(sprintf("Template markers were not found: %s / %s", start_marker, end_marker), call. = FALSE)
+            }
+            c(lines[seq_len(start)], replacement, lines[end:length(lines)])
+          }
+
+          template <- readLines("cran-comments.md", warn = FALSE)
+          rendered <- replace_block(
+            template,
+            "<!-- GHA_TEST_ENVIRONMENTS_START -->",
+            "<!-- GHA_TEST_ENVIRONMENTS_END -->",
+            test_env
+          )
+          rendered <- replace_block(
+            rendered,
+            "<!-- GHA_CHECK_RESULTS_START -->",
+            "<!-- GHA_CHECK_RESULTS_END -->",
+            check_results
+          )
+
+          dir.create("cran-submission", showWarnings = FALSE)
+          writeLines(rendered, file.path("cran-submission", "cran-comments.md"))
+
+          writeLines(
+            c(
+              paste(names(results), collapse = "\t"),
+              apply(results, 1L, function(x) paste(x, collapse = "\t"))
+            ),
+            file.path("cran-submission", "cran-comments-results.tsv")
+          )
+
+      - name: Build CRAN submission tarball
+        shell: bash
+        run: |
+          R CMD build . --no-resave-data
+          pkg_tarball=$(Rscript -e 'x <- Sys.glob("*.tar.gz"); x <- x[file.exists(x)]; cat(x[which.max(file.info(x)$mtime)])')
+          cp "$pkg_tarball" cran-submission/
+          ls -lh cran-submission
+
+      - name: Upload CRAN submission artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: cran-submission-${{ github.event_name }}
+          path: cran-submission

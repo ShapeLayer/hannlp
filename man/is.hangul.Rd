@@ -5,3 +5,6 @@
 \arguments{\item{sentence}{input characters}}
 \value{logical vector}
 \description{Check whether each input string contains only Hangul syllables or compatibility Jamo.}
+\examples{
+is.hangul(c("한글", "abc"))
+}

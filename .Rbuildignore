@@ -17,3 +17,13 @@
 ^src/modules/niadic/NIADic/\.Rbuildignore$
 ^src/modules/niadic/NIADic/inst/CITATION$
 ^src/modules/niadic/NIADic/vignettes/.*\.html$
+^cran-comments\.md$
+^configure$
+^configure\.win$
+^cleanup$
+^cleanup\.win$
+^tools/stage-inst-modules\.R$
+^tools/clean-inst-modules\.R$
+^tests/run_hannanum_tests\.sh$
+^tests/.*\.c$
+^tests/expected$

@@ -5,3 +5,6 @@
 \arguments{\item{hangul}{Hangul string}}
 \value{Jamo sequences}
 \description{Convert Hangul syllables to compatibility Jamo sequences.}
+\examples{
+convertHangulStringToJamos("한글")
+}
