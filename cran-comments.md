@@ -1,7 +1,7 @@
 ## Tests
 
 <!-- GHA_TESTS_START -->
-This section is completed by GitHub Actions for releases and manual dispatches.
+This section is completed by GitHub Actions for check, release, and manual runs.
 <!-- GHA_TESTS_END -->
 
 ## New submission

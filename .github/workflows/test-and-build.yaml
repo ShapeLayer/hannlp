@@ -239,11 +239,154 @@ jobs:
           path: check
 
       - name: Upload CRAN comments fragment
-        if: always() && github.event_name != 'pull_request'
+        if: always()
         uses: actions/upload-artifact@v5
         with:
           name: cran-comments-input-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check-summary
+
+  cran-comments:
+    name: Render CRAN Comments
+    if: always()
+    needs: check
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - name: Download CRAN comments inputs
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          pattern: cran-comments-input-*
+          path: cran-comments-input
+          merge-multiple: true
+
+      - name: Render CRAN comments
+        shell: Rscript {0}
+        run: |
+          result_files <- if (dir.exists("cran-comments-input")) {
+            list.files(
+              "cran-comments-input",
+              pattern = "^cran-comments-result-.*[.]tsv$",
+              recursive = TRUE,
+              full.names = TRUE
+            )
+          } else {
+            character()
+          }
+
+          if (length(result_files) > 0L) {
+            results <- do.call(rbind, lapply(result_files, utils::read.delim, stringsAsFactors = FALSE))
+            results <- results[order(results$os, results$r), , drop = FALSE]
+
+            test_results <- unlist(Map(
+              function(os, r, r_version, platform, os_detail, errors, warnings, notes) {
+                c(
+                  sprintf("- %s, R %s (%s; %s)", os, r, r_version, platform),
+                  sprintf("  - %s errors, %s warnings, %s notes", errors, warnings, notes),
+                  sprintf("  - Environment: %s", os_detail)
+                )
+              },
+              results$os,
+              results$r,
+              results$r_version,
+              results$platform,
+              results$os_detail,
+              results$errors,
+              results$warnings,
+              results$notes
+            ), use.names = FALSE)
+          } else {
+            results <- data.frame()
+            test_results <- "- No CRAN comments check fragments were available for this run."
+          }
+
+          run_url <- sprintf(
+            "%s/%s/actions/runs/%s",
+            Sys.getenv("GITHUB_SERVER_URL", unset = "https://github.com"),
+            Sys.getenv("GITHUB_REPOSITORY"),
+            Sys.getenv("GITHUB_RUN_ID")
+          )
+
+          if (length(result_files) > 0L) {
+            totals <- colSums(results[, c("errors", "warnings"), drop = FALSE])
+            status_line <- if (all(totals == 0L)) {
+              "There were no ERRORs or WARNINGs in the GitHub Actions matrix."
+            } else {
+              sprintf(
+                "The GitHub Actions matrix reported %s ERRORs and %s WARNINGs.",
+                totals[["errors"]],
+                totals[["warnings"]]
+              )
+            }
+            test_results <- c(
+              test_results,
+              "",
+              status_line,
+              "Any remaining NOTE is expected for a new CRAN submission:",
+              "",
+              "```text",
+              "New submission",
+              "```",
+              "",
+              sprintf("For detailed execution information, visit the [GitHub Actions run](%s).", run_url)
+            )
+          }
+
+          replace_block <- function(lines, start_marker, end_marker, replacement) {
+            start <- match(start_marker, lines)
+            end <- match(end_marker, lines)
+            if (is.na(start) || is.na(end) || start >= end) {
+              stop(sprintf("Template markers were not found: %s / %s", start_marker, end_marker), call. = FALSE)
+            }
+            c(lines[seq_len(start)], replacement, lines[end:length(lines)])
+          }
+
+          template <- readLines("cran-comments.md", warn = FALSE)
+          rendered <- replace_block(
+            template,
+            "<!-- GHA_TESTS_START -->",
+            "<!-- GHA_TESTS_END -->",
+            test_results
+          )
+
+          dir.create("cran-comments-rendered", showWarnings = FALSE)
+          writeLines(rendered, file.path("cran-comments-rendered", "cran-comments.md"))
+
+          if (length(result_files) > 0L) {
+            writeLines(
+              c(
+                paste(names(results), collapse = "\t"),
+                apply(results, 1L, function(x) paste(x, collapse = "\t"))
+              ),
+              file.path("cran-comments-rendered", "cran-comments-results.tsv")
+            )
+          }
+
+          github_summary <- Sys.getenv("GITHUB_STEP_SUMMARY", unset = "")
+          if (nzchar(github_summary)) {
+            cat(
+              paste(c("## Rendered CRAN Comments", "", rendered, ""), collapse = "\n"),
+              file = github_summary,
+              append = TRUE
+            )
+          }
+
+      - name: Upload rendered CRAN comments
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: rendered-cran-comments
+          path: cran-comments-rendered
 
   cran-submission:
     name: Build CRAN Submission Artifact
@@ -362,8 +505,7 @@ jobs:
           if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
             {
               printf '## CRAN Submission\n\n'
-              printf 'Generated cran-comments.md, check results, and a CRAN source tarball.\n\n'
-              printf 'See cran-submission/next-steps.md for the submission checklist.\n'
+              printf 'Generated cran-comments.md, check results, and a CRAN source tarball.\n'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -391,7 +533,6 @@ jobs:
           Rscript -e '
             body <- readLines("release-body-current.md", warn = FALSE)
             cran <- readLines(file.path("cran-submission", "cran-comments.md"), warn = FALSE)
-            next_steps <- readLines(file.path("cran-submission", "next-steps.md"), warn = FALSE)
             start <- "<!-- GHA_CRAN_SUBMISSION_START -->"
             end <- "<!-- GHA_CRAN_SUBMISSION_END -->"
             start_i <- match(start, body)
@@ -407,8 +548,6 @@ jobs:
               "## CRAN Comments",
               "",
               cran,
-              "",
-              next_steps,
               end
             )
             writeLines(c(body, "", block), "release-body.md")
@@ -435,10 +574,3 @@ jobs:
         with:
           name: cran-check-results
           path: cran-submission/cran-comments-results.tsv
-
-      - name: Upload next steps artifact
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v5
-        with:
-          name: cran-next-steps
-          path: cran-submission/next-steps.md
