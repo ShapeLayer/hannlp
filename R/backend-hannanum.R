@@ -4,7 +4,7 @@
     return(user_data)
   }
 
-  package_data <- system.file("hannanum-data", package = "HanNLP")
+  package_data <- system.file("modules", "hannanum", "inst", "hannanum-data", package = "HanNLP")
   if (nzchar(package_data) && dir.exists(package_data)) {
     return(package_data)
   }

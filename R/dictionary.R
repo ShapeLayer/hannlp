@@ -2,15 +2,15 @@
 .hannlp_state$user_data_dir <- NULL
 
 .hannlp_package_data_dir <- function() {
-  package_data <- system.file("hannanum-data", package = "HanNLP")
+  package_data <- system.file("modules", "hannanum", "inst", "hannanum-data", package = "HanNLP")
   if (nzchar(package_data) && dir.exists(package_data)) {
     return(package_data)
   }
-  local_data <- file.path(getwd(), "HanNLP", "inst", "hannanum-data")
+  local_data <- file.path(getwd(), "HanNLP", "modules", "hannanum", "inst", "hannanum-data")
   if (dir.exists(local_data)) {
     return(local_data)
   }
-  local_data <- file.path(getwd(), "inst", "hannanum-data")
+  local_data <- file.path(getwd(), "modules", "hannanum", "inst", "hannanum-data")
   if (dir.exists(local_data)) {
     return(local_data)
   }
@@ -27,6 +27,22 @@
 
 .hannlp_optional_namespace <- function(pkg) {
   tryCatch(loadNamespace(pkg), error = function(e) NULL)
+}
+
+.hannlp_bundled_niadic_dir <- function() {
+  package_data <- system.file("modules", "niadic", "NIADic", "inst", package = "HanNLP")
+  if (nzchar(package_data) && dir.exists(package_data)) {
+    return(package_data)
+  }
+  local_data <- file.path(getwd(), "HanNLP", "modules", "niadic", "NIADic", "inst")
+  if (dir.exists(local_data)) {
+    return(local_data)
+  }
+  local_data <- file.path(getwd(), "modules", "niadic", "NIADic", "inst")
+  if (dir.exists(local_data)) {
+    return(local_data)
+  }
+  ""
 }
 
 .hannlp_user_data_dir <- function(create = TRUE) {
@@ -215,6 +231,13 @@
   if (nzchar(override) && file.exists(override)) {
     return(override)
   }
+  bundled <- .hannlp_bundled_niadic_dir()
+  if (nzchar(bundled)) {
+    candidate <- file.path(bundled, "hangul.db")
+    if (file.exists(candidate)) {
+      return(candidate)
+    }
+  }
   niadic_pkg <- system.file(package = "NIADic")
   if (nzchar(niadic_pkg)) {
     candidate <- file.path(niadic_pkg, "hangul.db")
@@ -229,6 +252,13 @@
   override <- Sys.getenv("HANNLP_NIADIC_RDATA", unset = "")
   if (nzchar(override) && file.exists(override)) {
     return(override)
+  }
+  bundled <- .hannlp_bundled_niadic_dir()
+  if (nzchar(bundled)) {
+    candidate <- file.path(bundled, "dics.RData")
+    if (file.exists(candidate)) {
+      return(candidate)
+    }
   }
   niadic_pkg <- system.file(package = "NIADic")
   if (nzchar(niadic_pkg)) {
