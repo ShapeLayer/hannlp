@@ -1,6 +1,8 @@
 \.DS_Store$
 ^\.gitignore$
 ^\.github$
+^cran-submission$
+^cran-submission[.]tar[.]gz$
 ^inst/\.gitkeep$
 ^inst/modules/niadic/NIADic/inst/CITATION$
 ^build-.*/

@@ -1,8 +1,6 @@
-name: R CMD check
+name: Test and Build
 
 on:
-  push:
-    branches: [main]
   pull_request:
   release:
     types: [published]
@@ -14,7 +12,7 @@ permissions:
 
 jobs:
   check:
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    name: Check ${{ matrix.config.os }} (${{ matrix.config.r }})
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -46,30 +44,19 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: r-lib/actions/setup-tinytex@v2
-
       - name: Install system check tools
         if: runner.os == 'Linux'
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y devscripts pandoc tidy
+          sudo apt-get install -y --no-install-recommends \
+            devscripts \
+            tidy
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::sessioninfo, any::tinytex
+          extra-packages: any::rcmdcheck, any::sessioninfo
           needs: check
-
-      - name: Install LaTeX packages for R manuals
-        shell: Rscript {0}
-        run: |
-          tinytex::tlmgr_install(c(
-            "hyperref",
-            "inconsolata",
-            "psnfss",
-            "url",
-            "zi4"
-          ))
 
       - name: Check source tree cleanliness
         shell: bash
@@ -80,36 +67,8 @@ jobs:
             exit 1
           fi
 
-      - name: Build package tarball
-        shell: bash
-        run: |
-          R CMD build . --no-manual --no-resave-data
-          pkg_tarball=$(ls -1t *.tar.gz | head -n 1)
-          Rscript -e 'cat("PKG_TARBALL=", normalizePath(commandArgs(TRUE)[1], winslash = "/", mustWork = TRUE), "\n", sep = "")' "$pkg_tarball" >> "$GITHUB_ENV"
-
-      - name: Inspect package size and contents
-        shell: bash
-        run: |
-          ls -lh "$PKG_TARBALL"
-          if tar -tzf "$PKG_TARBALL" | grep -E '(^|/)\.git(/|$)|\.(o|so|dll|dylib)$|vignettes/.*\.html$|(^|/)\.Rbuildignore$|(^|/)CITATION$'; then
-            exit 1
-          fi
-
-      - name: R CMD check
+      - name: R CMD check and collect results
         shell: Rscript {0}
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          rcmdcheck::rcmdcheck(
-            Sys.getenv("PKG_TARBALL"),
-            args = c("--as-cran"),
-            build_args = character(),
-            error_on = "warning",
-            check_dir = "check"
-          )
-
-      - name: R CMD check for CRAN submission
-        shell: Rscript {0}
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
         env:
           MATRIX_OS: ${{ matrix.config.os }}
           MATRIX_R: ${{ matrix.config.r }}
@@ -117,9 +76,9 @@ jobs:
           dir.create("check-summary", showWarnings = FALSE)
 
           result <- rcmdcheck::rcmdcheck(
-            Sys.getenv("PKG_TARBALL"),
-            args = c("--as-cran"),
-            build_args = character(),
+            ".",
+            args = c("--no-manual", "--as-cran"),
+            build_args = c("--no-manual", "--no-resave-data"),
             error_on = "never",
             check_dir = "check"
           )
@@ -134,8 +93,6 @@ jobs:
           warnings <- count_items(result$warnings)
           notes <- count_items(result$notes)
           status <- sprintf("%d errors, %d warnings, %d notes", errors, warnings, notes)
-          pkg_size <- file.info(Sys.getenv("PKG_TARBALL"))$size
-          pkg_size_mb <- sprintf("%.1f MB", pkg_size / 1024^2)
           package_name <- read.dcf("DESCRIPTION", fields = "Package")[[1L]]
           check_log <- file.path("check", sprintf("%s.Rcheck", package_name), "00check.log")
 
@@ -161,8 +118,6 @@ jobs:
             sprintf("- %s, R %s: %s", Sys.getenv("MATRIX_OS"), Sys.getenv("MATRIX_R"), status),
             sprintf("  - R: %s", R.version.string),
             sprintf("  - Platform: %s", R.version$platform),
-            sprintf("  - Source package: %s", basename(Sys.getenv("PKG_TARBALL"))),
-            sprintf("  - Source package size: %s", pkg_size_mb),
             sprintf("  - Check log: %s", check_log),
             ""
           )
@@ -172,8 +127,6 @@ jobs:
             r = Sys.getenv("MATRIX_R"),
             r_version = R.version.string,
             platform = R.version$platform,
-            source_package = basename(Sys.getenv("PKG_TARBALL")),
-            source_package_size = pkg_size_mb,
             errors = errors,
             warnings = warnings,
             notes = notes,
@@ -203,8 +156,6 @@ jobs:
             sprintf("- R CMD check result: %s", status),
             sprintf("- R version: %s", R.version.string),
             sprintf("- Platform: %s", R.version$platform),
-            sprintf("- Source package: `%s`", basename(Sys.getenv("PKG_TARBALL"))),
-            sprintf("- Source package size: %s", pkg_size_mb),
             "",
             "### Notes",
             "```text",
@@ -245,16 +196,15 @@ jobs:
           path: check
 
       - name: Upload CRAN comments fragment
-        if: ${{ always() && (github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch') }}
+        if: always()
         uses: actions/upload-artifact@v5
         with:
           name: cran-comments-input-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check-summary
 
   cran-submission:
-    name: CRAN submission artifact
+    name: Build CRAN Submission Artifact
     needs: check
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
 
     env:
@@ -355,16 +305,24 @@ jobs:
             file.path("cran-submission", "cran-comments-results.tsv")
           )
 
-      - name: Build CRAN submission tarball
+      - name: Build CRAN source tarball
         shell: bash
         run: |
-          R CMD build . --no-resave-data
+          R CMD build . --no-manual --no-resave-data
           pkg_tarball=$(Rscript -e 'x <- Sys.glob("*.tar.gz"); x <- x[file.exists(x)]; cat(x[which.max(file.info(x)$mtime)])')
+          ls -lh "$pkg_tarball"
+          if tar -tzf "$pkg_tarball" | grep -E '(^|/)\.git(/|$)|\.(o|so|dll|dylib)$|vignettes/.*\.html$|(^|/)\.Rbuildignore$|(^|/)CITATION$'; then
+            exit 1
+          fi
           cp "$pkg_tarball" cran-submission/
           ls -lh cran-submission
+
+      - name: Create submission artifact tarball
+        shell: bash
+        run: tar -czf cran-submission.tar.gz cran-submission
 
       - name: Upload CRAN submission artifact
         uses: actions/upload-artifact@v5
         with:
-          name: cran-submission-${{ github.event_name }}
-          path: cran-submission
+          name: cran-submission
+          path: cran-submission.tar.gz
