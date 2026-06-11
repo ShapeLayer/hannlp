@@ -189,14 +189,14 @@ jobs:
           }
 
       - name: Upload check logs
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v5
         with:
           name: check-results-${{ matrix.config.os }}-${{ matrix.config.r }}
           path: check
 
       - name: Upload CRAN comments fragment
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v5
         with:
           name: cran-comments-input-${{ matrix.config.os }}-${{ matrix.config.r }}
@@ -204,8 +204,12 @@ jobs:
 
   cran-submission:
     name: Build CRAN Submission Artifact
+    if: github.event_name != 'pull_request'
     needs: check
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     env:
       R_KEEP_PKG_SOURCE: yes
@@ -305,11 +309,28 @@ jobs:
             file.path("cran-submission", "cran-comments-results.tsv")
           )
 
+      - name: Write next steps
+        shell: bash
+        run: |
+          {
+            printf '## Next steps\n\n'
+            printf '1. Download the CRAN source tarball from this run.\n'
+            printf '2. Review cran-comments.md and cran-comments-results.tsv.\n'
+            printf '3. Submit the tarball to CRAN after confirming the release notes and check results.\n'
+          } > cran-submission/next-steps.md
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            {
+              printf '## CRAN Submission\n\n'
+              printf 'Generated cran-comments.md, check results, and a CRAN source tarball.\n\n'
+              printf 'See cran-submission/next-steps.md for the submission checklist.\n'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Build CRAN source tarball
         shell: bash
         run: |
           R CMD build . --no-manual --no-resave-data
-          pkg_tarball=$(Rscript -e 'x <- Sys.glob("*.tar.gz"); x <- x[file.exists(x)]; cat(x[which.max(file.info(x)$mtime)])')
+          pkg_tarball=$(Rscript -e "x <- Sys.glob('*.tar.gz'); x <- x[file.exists(x)]; cat(x[which.max(file.info(x)\$mtime)])")
           ls -lh "$pkg_tarball"
           if tar -tzf "$pkg_tarball" | grep -E '(^|/)\.git(/|$)|\.(o|so|dll|dylib)$|vignettes/.*\.html$|(^|/)\.Rbuildignore$|(^|/)CITATION$'; then
             exit 1
@@ -317,12 +338,66 @@ jobs:
           cp "$pkg_tarball" cran-submission/
           ls -lh cran-submission
 
-      - name: Create submission artifact tarball
+      - name: Attach release assets and append CRAN comments
+        if: github.event_name == 'release'
         shell: bash
-        run: tar -czf cran-submission.tar.gz cran-submission
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$RELEASE_TAG" cran-submission/*.tar.gz --clobber
+          gh release view "$RELEASE_TAG" --json body --jq '.body // ""' > release-body-current.md
+          Rscript -e '
+            body <- readLines("release-body-current.md", warn = FALSE)
+            cran <- readLines(file.path("cran-submission", "cran-comments.md"), warn = FALSE)
+            next_steps <- readLines(file.path("cran-submission", "next-steps.md"), warn = FALSE)
+            start <- "<!-- GHA_CRAN_SUBMISSION_START -->"
+            end <- "<!-- GHA_CRAN_SUBMISSION_END -->"
+            start_i <- match(start, body)
+            end_i <- match(end, body)
+            if (!is.na(start_i) && !is.na(end_i) && start_i <= end_i) {
+              body <- body[-seq.int(start_i, end_i)]
+            }
+            while (length(body) > 0L && !nzchar(body[length(body)])) {
+              body <- body[-length(body)]
+            }
+            block <- c(
+              start,
+              "## CRAN Comments",
+              "",
+              cran,
+              "",
+              next_steps,
+              end
+            )
+            writeLines(c(body, "", block), "release-body.md")
+          '
+          gh release edit "$RELEASE_TAG" --notes-file release-body.md
 
-      - name: Upload CRAN submission artifact
+      - name: Upload CRAN source tarball artifact
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v5
         with:
-          name: cran-submission
-          path: cran-submission.tar.gz
+          name: cran-source-tarball
+          path: cran-submission/*.tar.gz
+
+      - name: Upload CRAN comments artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v5
+        with:
+          name: cran-comments
+          path: cran-submission/cran-comments.md
+
+      - name: Upload CRAN check results artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v5
+        with:
+          name: cran-check-results
+          path: cran-submission/cran-comments-results.tsv
+
+      - name: Upload next steps artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v5
+        with:
+          name: cran-next-steps
+          path: cran-submission/next-steps.md

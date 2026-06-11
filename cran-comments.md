@@ -1,13 +1,13 @@
 ## Test environments
 
 <!-- GHA_TEST_ENVIRONMENTS_START -->
-This section is completed by GitHub Actions for pull requests and releases.
+This section is completed by GitHub Actions for releases and manual dispatches.
 <!-- GHA_TEST_ENVIRONMENTS_END -->
 
 ## R CMD check results
 
 <!-- GHA_CHECK_RESULTS_START -->
-This section is completed by GitHub Actions for pull requests and releases.
+This section is completed by GitHub Actions for releases and manual dispatches.
 <!-- GHA_CHECK_RESULTS_END -->
 
 ## New submission
