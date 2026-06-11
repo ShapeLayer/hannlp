@@ -1,6 +1,10 @@
 # HanNLP
 
-derived from [KoNLP](https://github.com/haven-jeon/KoNLP)
+This package offers POS tagging and morphological analysis for Korean linguistics research. It comes packed with specialized utilities—including a keystroke converter, Hangul automata, and tools for calculating Mutual Information. You can also customize your workflow by selectively adding or editing entries in the morphological dictionary.
+
+<br />
+
+_derived from [KoNLP](https://github.com/haven-jeon/KoNLP)_
 
 Since the Hannanum analyzer, which KoNLP depends on, is written in Java, KoNLP requires rJava and a Java environment to function. However, configuring the Java environment for rJava involves several manual steps, often making the installation process of KoNLP quite cumbersome.
 

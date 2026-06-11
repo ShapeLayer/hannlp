@@ -96,6 +96,48 @@ jobs:
           package_name <- read.dcf("DESCRIPTION", fields = "Package")[[1L]]
           check_log <- file.path("check", sprintf("%s.Rcheck", package_name), "00check.log")
 
+          command_output <- function(command, args = character()) {
+            output <- tryCatch(
+              system2(command, args, stdout = TRUE, stderr = TRUE),
+              error = function(e) character()
+            )
+            output[nzchar(output)]
+          }
+
+          clean_field <- function(x) {
+            gsub("[\t\r\n]+", " ", x)
+          }
+
+          os_release <- switch(
+            Sys.getenv("RUNNER_OS"),
+            Linux = {
+              if (file.exists("/etc/os-release")) {
+                lines <- readLines("/etc/os-release", warn = FALSE)
+                fields <- strsplit(lines[grepl("=", lines, fixed = TRUE)], "=", fixed = TRUE)
+                values <- vapply(fields, function(x) gsub('^"|"$', "", x[2L]), character(1L))
+                names(values) <- vapply(fields, `[[`, character(1L), 1L)
+                value <- values[intersect(c("PRETTY_NAME", "VERSION_ID", "VERSION_CODENAME"), names(values))]
+                paste(value[nzchar(value)], collapse = "; ")
+              } else {
+                paste(command_output("uname", c("-srvmo")), collapse = " ")
+              }
+            },
+            macOS = paste(command_output("sw_vers"), collapse = "; "),
+            Windows = paste(command_output("cmd", c("/c", "ver")), collapse = "; "),
+            paste(Sys.info()[c("sysname", "release", "version")], collapse = "; ")
+          )
+
+          os_detail <- paste(
+            c(
+              sprintf("Runner OS: %s", Sys.getenv("RUNNER_OS", unset = "unknown")),
+              if (nzchar(Sys.getenv("ImageOS"))) sprintf("ImageOS: %s", Sys.getenv("ImageOS")) else character(),
+              if (nzchar(Sys.getenv("ImageVersion"))) sprintf("ImageVersion: %s", Sys.getenv("ImageVersion")) else character(),
+              if (nzchar(os_release)) sprintf("OS release: %s", os_release) else character()
+            ),
+            collapse = "; "
+          )
+          os_detail <- clean_field(os_detail)
+
           note_text <- if (notes > 0L) {
             paste(capture.output(print(result$notes)), collapse = "\n")
           } else {
@@ -127,6 +169,7 @@ jobs:
             r = Sys.getenv("MATRIX_R"),
             r_version = R.version.string,
             platform = R.version$platform,
+            os_detail = os_detail,
             errors = errors,
             warnings = warnings,
             notes = notes,
@@ -247,32 +290,42 @@ jobs:
           results <- do.call(rbind, lapply(result_files, utils::read.delim, stringsAsFactors = FALSE))
           results <- results[order(results$os, results$r), , drop = FALSE]
 
-          test_env <- sprintf(
-            "- %s, R %s (%s; %s)",
+          test_results <- unlist(Map(
+            function(os, r, r_version, platform, os_detail, errors, warnings, notes) {
+              c(
+                sprintf("- %s, R %s (%s; %s)", os, r, r_version, platform),
+                sprintf("  - %s errors, %s warnings, %s notes", errors, warnings, notes),
+                sprintf("  - Environment: %s", os_detail)
+              )
+            },
             results$os,
             results$r,
             results$r_version,
-            results$platform
-          )
-
-          check_results <- sprintf(
-            "- %s, R %s: %s errors, %s warnings, %s notes",
-            results$os,
-            results$r,
+            results$platform,
+            results$os_detail,
             results$errors,
             results$warnings,
             results$notes
+          ), use.names = FALSE)
+
+          run_url <- sprintf(
+            "%s/%s/actions/runs/%s",
+            Sys.getenv("GITHUB_SERVER_URL", unset = "https://github.com"),
+            Sys.getenv("GITHUB_REPOSITORY"),
+            Sys.getenv("GITHUB_RUN_ID")
           )
 
-          check_results <- c(
-            check_results,
+          test_results <- c(
+            test_results,
             "",
             "There were no ERRORs or WARNINGs in the GitHub Actions matrix.",
             "Any remaining NOTE is expected for a new CRAN submission:",
             "",
             "```text",
             "New submission",
-            "```"
+            "```",
+            "",
+            sprintf("For detailed execution information, visit the [GitHub Actions run](%s).", run_url)
           )
 
           replace_block <- function(lines, start_marker, end_marker, replacement) {
@@ -287,15 +340,9 @@ jobs:
           template <- readLines("cran-comments.md", warn = FALSE)
           rendered <- replace_block(
             template,
-            "<!-- GHA_TEST_ENVIRONMENTS_START -->",
-            "<!-- GHA_TEST_ENVIRONMENTS_END -->",
-            test_env
-          )
-          rendered <- replace_block(
-            rendered,
-            "<!-- GHA_CHECK_RESULTS_START -->",
-            "<!-- GHA_CHECK_RESULTS_END -->",
-            check_results
+            "<!-- GHA_TESTS_START -->",
+            "<!-- GHA_TESTS_END -->",
+            test_results
           )
 
           dir.create("cran-submission", showWarnings = FALSE)
@@ -312,12 +359,6 @@ jobs:
       - name: Write next steps
         shell: bash
         run: |
-          {
-            printf '## Next steps\n\n'
-            printf '1. Download the CRAN source tarball from this run.\n'
-            printf '2. Review cran-comments.md and cran-comments-results.tsv.\n'
-            printf '3. Submit the tarball to CRAN after confirming the release notes and check results.\n'
-          } > cran-submission/next-steps.md
           if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
             {
               printf '## CRAN Submission\n\n'
