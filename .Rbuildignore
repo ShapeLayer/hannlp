@@ -3,6 +3,7 @@
 ^\.github$
 ^cran-submission$
 ^cran-submission[.]tar[.]gz$
+^cran-comments-input(/|$)
 ^inst/\.gitkeep$
 ^inst/modules/niadic/NIADic/inst/CITATION$
 ^build-.*/
