@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y devscripts tidy
+          sudo apt-get install -y devscripts pandoc tidy
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

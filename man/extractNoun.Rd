@@ -17,6 +17,7 @@ local({
     unlink(tmp, recursive = TRUE, force = TRUE)
   })
   Sys.setenv(HANNLP_USER_DATA_DIR = tmp)
-  extractNoun("한글 형태소 분석을 테스트합니다")
+  text <- intToUtf8(c(0xd55c, 0xae00, 0x20, 0xd615, 0xd0dc, 0xc18c))
+  extractNoun(text)
 })
 }

@@ -6,5 +6,6 @@
 \value{Jamo sequences}
 \description{Convert Hangul syllables to compatibility Jamo sequences.}
 \examples{
-convertHangulStringToJamos("한글")
+hangul <- intToUtf8(c(0xd55c, 0xae00))
+convertHangulStringToJamos(hangul)
 }
