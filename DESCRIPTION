@@ -3,12 +3,13 @@ Type: Package
 Title: Korean Morphological Analysis and Hangul Utilities
 Version: 0.1.0
 Authors@R: c(
-    person("Jonghyeon", "Park", role = c("aut", "cre"), email = "jonghyeon@jnu.ac.kr"),
+    person("Jonghyeon", "Park", role = c("aut", "cre"), email = "shapelayer.dev@gmail.com"),
     person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),
     person("Taekyung", "Kim", role = "ctb"),
     person("Semantic Web Research Center, KAIST", role = "cph"),
     person("National Information Society Agency", role = "cph")
   )
+Maintainer: Jonghyeon Park <shapelayer.dev@gmail.com>
 Description: Provides Korean morphological analysis, part-of-speech tagging,
     noun extraction, Hangul conversion utilities, concordance search, mutual
     information statistics, and dictionary management tools for Korean text
