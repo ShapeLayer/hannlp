@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+if [ -n "${R_HOME:-}" ]; then
+  "${R_HOME}/bin${R_ARCH_BIN:-}/Rscript.exe" tools/clean-inst-modules.R
+else
+  Rscript.exe tools/clean-inst-modules.R
+fi

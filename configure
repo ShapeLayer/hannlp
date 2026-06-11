@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+if [ -n "${R_HOME:-}" ]; then
+  "${R_HOME}/bin/Rscript" tools/stage-inst-modules.R
+else
+  Rscript tools/stage-inst-modules.R
+fi

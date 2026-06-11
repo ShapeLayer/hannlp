@@ -321,6 +321,7 @@
     }
   }
   out <- data.frame(term = as.character(dic$term), tag = as.character(dic$tag), stringsAsFactors = FALSE)
+  out <- out[!is.na(out$term) & !is.na(out$tag) & !is.na(tags[out$tag]), , drop = FALSE]
   Encoding(out$term) <- "UTF-8"
   out
 }

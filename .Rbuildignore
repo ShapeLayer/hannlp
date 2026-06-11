@@ -3,5 +3,6 @@
 ^build-.*/
 ^src/.*\.(o|so|dll|dylib)$
 ^.*\.Rcheck$
+^inst/modules/
 ^CMakeLists\.txt$
 ^LICENSE$
