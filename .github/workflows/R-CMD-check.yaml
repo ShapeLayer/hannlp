@@ -62,7 +62,7 @@ jobs:
         run: |
           R CMD build . --no-manual --no-resave-data
           pkg_tarball=$(ls -1t *.tar.gz | head -n 1)
-          printf 'PKG_TARBALL=%s/%s\n' "$PWD" "$pkg_tarball" >> "$GITHUB_ENV"
+          Rscript -e 'cat("PKG_TARBALL=", normalizePath(commandArgs(TRUE)[1], winslash = "/", mustWork = TRUE), "\n", sep = "")' "$pkg_tarball" >> "$GITHUB_ENV"
 
       - name: Inspect package size and contents
         shell: bash
