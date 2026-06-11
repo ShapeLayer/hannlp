@@ -6,11 +6,11 @@
   if (nzchar(package_data) && dir.exists(package_data)) {
     return(package_data)
   }
-  local_data <- file.path(getwd(), "HanNLP", "modules", "hannanum", "inst", "hannanum-data")
+  local_data <- file.path(getwd(), "HanNLP", "src", "modules", "hannanum", "inst", "hannanum-data")
   if (dir.exists(local_data)) {
     return(local_data)
   }
-  local_data <- file.path(getwd(), "modules", "hannanum", "inst", "hannanum-data")
+  local_data <- file.path(getwd(), "src", "modules", "hannanum", "inst", "hannanum-data")
   if (dir.exists(local_data)) {
     return(local_data)
   }
@@ -34,11 +34,11 @@
   if (nzchar(package_data) && dir.exists(package_data)) {
     return(package_data)
   }
-  local_data <- file.path(getwd(), "HanNLP", "modules", "niadic", "NIADic", "inst")
+  local_data <- file.path(getwd(), "HanNLP", "src", "modules", "niadic", "NIADic", "inst")
   if (dir.exists(local_data)) {
     return(local_data)
   }
-  local_data <- file.path(getwd(), "modules", "niadic", "NIADic", "inst")
+  local_data <- file.path(getwd(), "src", "modules", "niadic", "NIADic", "inst")
   if (dir.exists(local_data)) {
     return(local_data)
   }

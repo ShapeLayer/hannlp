@@ -1,15 +1,21 @@
 Package: HanNLP
 Type: Package
-Title: Korean NLP Package
+Title: Korean Morphological Analysis and Hangul Utilities
 Version: 0.1.0
 Authors@R: c(
     person("Jonghyeon", "Park", role = c("aut", "cre"), email = "jonghyeon@jnu.ac.kr"),
     person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),
-    person("Taekyung", "Kim", role = "ctb")
+    person("Taekyung", "Kim", role = "ctb"),
+    person("Semantic Web Research Center, KAIST", role = "cph"),
+    person("National Information Society Agency", role = "cph")
   )
-Description: POS Tagger and Morphological Analyzer for Korean text based research. It provides tools for corpus linguistics research such as Keystroke converter, Hangul automata, Concordance, and Mutual Information. It also provides a convenient interface for users to apply, edit and add morphological dictionary selectively. (derived from KoNLP)
+Description: Provides Korean morphological analysis, part-of-speech tagging,
+    noun extraction, Hangul conversion utilities, concordance search, mutual
+    information statistics, and dictionary management tools for Korean text
+    research. The analyzer backend is derived from KoNLP and HanNanum.
 License: GPL-3
+Copyright: See inst/COPYRIGHTS for bundled third-party code and data.
 Encoding: UTF-8
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.0.0)
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

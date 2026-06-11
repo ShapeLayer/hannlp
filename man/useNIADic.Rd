@@ -1,7 +1,13 @@
 \name{useNIADic}
 \alias{useNIADic}
 \title{Use NIA dictionary}
-\usage{useNIADic(which_dic = c("woorimalsam", "insighter"), category_dic_nms = "all", backup = TRUE)}
+\usage{
+useNIADic(
+  which_dic = c("woorimalsam", "insighter"),
+  category_dic_nms = "all",
+  backup = TRUE
+)
+}
 \arguments{
   \item{which_dic}{retained for KoNLP API compatibility}
   \item{category_dic_nms}{retained for KoNLP API compatibility}

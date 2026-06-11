@@ -1,7 +1,15 @@
 \name{buildDictionary}
 \alias{buildDictionary}
 \title{Build HanNLP user dictionary}
-\usage{buildDictionary(ext_dic = "", category_dic_nms = "", user_dic = data.frame(), replace_usr_dic = FALSE, verbose = FALSE)}
+\usage{
+buildDictionary(
+  ext_dic = "",
+  category_dic_nms = "",
+  user_dic = data.frame(),
+  replace_usr_dic = FALSE,
+  verbose = FALSE
+)
+}
 \arguments{
   \item{ext_dic}{external dictionary names: \code{sejong}, \code{woorimalsam}, or \code{insighter}}
   \item{category_dic_nms}{category names for \code{woorimalsam}; English aliases and Korean names are accepted}

@@ -1,0 +1,88 @@
+name: R CMD check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  check:
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: ubuntu-latest, r: release}
+          - {os: ubuntu-latest, r: devel}
+          - {os: macos-latest, r: release}
+          - {os: windows-latest, r: release}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      HANNLP_USER_DATA_DIR: ${{ runner.temp }}/hannlp-user-data
+      _R_CHECK_CRAN_INCOMING_REMOTE_: false
+      _R_CHECK_FORCE_SUGGESTS_: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::sessioninfo
+          needs: check
+
+      - name: Check source tree cleanliness
+        shell: bash
+        run: |
+          if compgen -G "src/*.o" > /dev/null || compgen -G "src/*.so" > /dev/null || compgen -G "src/*.dll" > /dev/null || compgen -G "src/*.dylib" > /dev/null; then
+            printf 'Compiled artifacts must not be committed under src/.\n'
+            ls -la src
+            exit 1
+          fi
+
+      - name: Build package tarball
+        shell: bash
+        run: |
+          R CMD build . --no-manual --no-resave-data
+          pkg_tarball=$(ls -1t *.tar.gz | head -n 1)
+          printf 'PKG_TARBALL=%s/%s\n' "$PWD" "$pkg_tarball" >> "$GITHUB_ENV"
+
+      - name: Inspect package size and contents
+        shell: bash
+        run: |
+          ls -lh "$PKG_TARBALL"
+          if tar -tzf "$PKG_TARBALL" | grep -E '(^|/)\.git(/|$)|\.(o|so|dll|dylib)$|vignettes/.*\.html$|(^|/)\.Rbuildignore$|(^|/)CITATION$'; then
+            exit 1
+          fi
+
+      - name: R CMD check
+        shell: Rscript {0}
+        run: |
+          rcmdcheck::rcmdcheck(
+            Sys.getenv("PKG_TARBALL"),
+            args = c("--no-manual", "--as-cran"),
+            build_args = character(),
+            error_on = "warning",
+            check_dir = "check"
+          )
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-results-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check

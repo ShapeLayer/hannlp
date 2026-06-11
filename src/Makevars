@@ -1,7 +1,7 @@
-PKG_CPPFLAGS = -I../modules/hannanum/lib/hannanum
+PKG_CPPFLAGS = -Imodules/hannanum/lib/hannanum
 OBJECTS = hannlp.o hannanum_r.o hangul_r.o hannanum.o
 
 all: $(SHLIB)
 
-hannanum.o: ../modules/hannanum/lib/hannanum/hannanum.c
+hannanum.o: modules/hannanum/lib/hannanum/hannanum.c
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@

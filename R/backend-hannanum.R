@@ -22,6 +22,11 @@
     return(local_data)
   }
 
+  source_data <- file.path(getwd(), "src", "modules", "hannanum", "inst", "hannanum-data")
+  if (dir.exists(source_data)) {
+    return(source_data)
+  }
+
   stop("HanNanum data directory was not found.", call. = FALSE)
 }
 
