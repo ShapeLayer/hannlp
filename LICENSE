@@ -2039,7 +2039,7 @@ Public License instead of this License.  But first, please read
 
 -----
 
-buffer.h(strbuf.h), buffer.c(strbuf.c), chunk.h
+buffer.h(strbuf.h), buffer.c(strbuf.c)
 
 are derived from "https://github.com/commonmark/cmark" (derived from code (C) 2012 Github, Inc.)
 
