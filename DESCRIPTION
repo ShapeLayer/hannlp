@@ -13,7 +13,7 @@ Maintainer: Jonghyeon Park <shapelayer.dev@gmail.com>
 Description: Provides Korean morphological analysis, part-of-speech tagging,
     noun extraction, Hangul conversion utilities, concordance search, mutual
     information statistics, and dictionary management tools for Korean text
-    research. The analyzer backend is derived from KoNLP and HanNanum.
+    research. The analyzer backend is derived from 'KoNLP' and 'HanNanum'.
 License: GPL-3
 Copyright: See inst/COPYRIGHTS for bundled third-party code and data.
 URL: https://github.com/ShapeLayer/HanNLP
