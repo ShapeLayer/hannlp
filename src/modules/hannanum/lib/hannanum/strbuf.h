@@ -1,7 +1,7 @@
 /*
 buffer.h(strbuf.h), buffer.c(strbuf.c), chunk.h
 
-are derived from code (C) 2012 Github, Inc.
+are derived from Copyright (c) 2014, John MacFarlane.
 (derived from "https://github.com/commonmark/cmark")
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

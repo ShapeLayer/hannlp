@@ -21,3 +21,11 @@ Copyright: National Information Society Agency and contributors
 License: Creative Commons Attribution-ShareAlike 2.0
 Location: inst/modules/niadic/NIADic/inst/dics.RData
 Source: https://github.com/haven-jeon/NIADic
+
+String buffer utilities (cmark-derived)
+Copyright: 2014, John MacFarlane
+License: MIT
+Location: src/modules/hannanum/lib/hannanum/strbuf.c, strbuf.h
+Source: https://github.com/commonmark/cmark
+The original MIT copyright and permission notice is retained in the bundled
+source file headers.

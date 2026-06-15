@@ -10,7 +10,6 @@
 ^src/.*\.(o|so|dll|dylib)$
 ^.*\.Rcheck$
 ^CMakeLists\.txt$
-^LICENSE$
 ^src/modules/niadic/\.git$
 ^src/modules/.*/\.gitignore$
 ^src/modules/hannanum/inst$
