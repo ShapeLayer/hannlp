@@ -20,15 +20,19 @@ therefore does not require Java or rJava at runtime.
   external dictionary packages.
 
 * The package code is licensed under GPL-3. It additionally bundles
-  third-party data, including the NIADic dictionary distributed under the
-  Creative Commons Attribution-ShareAlike 2.0 license. All third-party
-  components, their copyright holders, and their licenses are documented in
-  `inst/COPYRIGHTS` and the `LICENSE` file, and the DESCRIPTION uses
-  `License: GPL-3 + file LICENSE`.
+  third-party code and data derived from the GPL-3 licensed JHanNanum /
+  HanNanum materials, plus small MIT-licensed string buffer utilities
+  derived from commonmark/cmark. The MIT license is compatible with the
+  GPL. All third-party components, their copyright holders, and their
+  licenses are documented in `inst/COPYRIGHTS` and the `LICENSE` file, and
+  the DESCRIPTION uses `License: GPL-3 + file LICENSE`.
 
 * `Sejong` and `NIADic` are optional and are not available on CRAN, so they
-  are not listed under `Suggests`. They are accessed defensively at runtime
-  (via `loadNamespace()` / `system.file()`) and are never required by
-  examples or tests.
+  are not listed under `Suggests`. No NIADic data is bundled or distributed
+  (NIADic is CC BY-SA, which is incompatible with the GPL); `useNIADic()`
+  works only when a user has separately installed the `NIADic` package and
+  loaded it in their session. These packages are accessed defensively at
+  runtime (via `isNamespaceLoaded()` / `system.file()`) and are never
+  required by examples or tests.
 
 * There are no references describing the methods in this package.

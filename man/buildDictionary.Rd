@@ -11,11 +11,11 @@ buildDictionary(
 )
 }
 \arguments{
-  \item{ext_dic}{external dictionary names: \code{sejong}, \code{woorimalsam}, or \code{insighter}}
-  \item{category_dic_nms}{category names for \code{woorimalsam}; English aliases and Korean names are accepted}
+  \item{ext_dic}{optional external dictionary names: \code{sejong}, \code{woorimalsam}, or \code{insighter}}
+  \item{category_dic_nms}{retained for KoNLP API compatibility}
   \item{user_dic}{user dictionary data.frame with term and KAIST tag columns}
   \item{replace_usr_dic}{replace existing user dictionary instead of appending}
   \item{verbose}{print detail progress}
 }
 \value{invisible data.frame of the resulting user dictionary}
-\description{Build the writable HanNLP user dictionary from user-supplied entries and optional external Sejong/NIADic sources. External data is read from installed packages or paths specified by \code{HANNLP_SEJONG_HANDIC}, \code{HANNLP_NIADIC_RDATA}, or \code{HANNLP_NIADIC_DB}.}
+\description{Build the writable HanNLP user dictionary from user-supplied entries and optional external sources. The Sejong dictionary is read from the installed Sejong package or the path specified by \code{HANNLP_SEJONG_HANDIC}. The \code{woorimalsam} and \code{insighter} dictionaries require the optional \code{NIADic} package to be installed and loaded (\code{library(NIADic)}) in the current session; HanNLP does not bundle NIADic data.}

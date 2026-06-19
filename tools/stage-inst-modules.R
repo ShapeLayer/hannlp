@@ -20,10 +20,6 @@ sources <- list(
   hannanum = list(
     from = file.path(root, "src", "modules", "hannanum", "inst", "hannanum-data"),
     to = file.path(inst_modules, "hannanum", "inst", "hannanum-data")
-  ),
-  niadic = list(
-    from = file.path(root, "src", "modules", "niadic", "NIADic", "inst"),
-    to = file.path(inst_modules, "niadic", "NIADic", "inst")
   )
 )
 

@@ -16,12 +16,6 @@ JHanNanum is distributed under GPLv3 and includes resources and configuration
 files as part of the distribution.
 Location: inst/modules/hannanum/inst/hannanum-data
 
-NIADic dictionary data
-Copyright: National Information Society Agency and contributors
-License: Creative Commons Attribution-ShareAlike 2.0
-Location: inst/modules/niadic/NIADic/inst/dics.RData
-Source: https://github.com/haven-jeon/NIADic
-
 String buffer utilities (cmark-derived)
 Copyright: 2014, John MacFarlane
 License: MIT

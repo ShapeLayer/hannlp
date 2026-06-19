@@ -25,26 +25,6 @@
   file.path(tools::R_user_dir("HanNLP", "data"), "hannanum-data")
 }
 
-.hannlp_optional_namespace <- function(pkg) {
-  tryCatch(loadNamespace(pkg), error = function(e) NULL)
-}
-
-.hannlp_bundled_niadic_dir <- function() {
-  package_data <- system.file("modules", "niadic", "NIADic", "inst", package = "HanNLP")
-  if (nzchar(package_data) && dir.exists(package_data)) {
-    return(package_data)
-  }
-  local_data <- file.path(getwd(), "HanNLP", "src", "modules", "niadic", "NIADic", "inst")
-  if (dir.exists(local_data)) {
-    return(local_data)
-  }
-  local_data <- file.path(getwd(), "src", "modules", "niadic", "NIADic", "inst")
-  if (dir.exists(local_data)) {
-    return(local_data)
-  }
-  ""
-}
-
 .hannlp_user_data_dir <- function(create = TRUE) {
   if (!is.null(.hannlp_state$user_data_dir)) {
     return(.hannlp_state$user_data_dir)
@@ -99,86 +79,6 @@
   out
 }
 
-.hannlp_category_aliases <- c(
-  general = "\uc77c\ubc18",
-  chemical = "\ud654\ud559",
-  language = "\uc5b8\uc5b4",
-  music = "\uc74c\uc545",
-  history = "\uc5ed\uc0ac",
-  education = "\uad50\uc721",
-  "society in general" = "\uc0ac\ud68c \uc77c\ubc18",
-  life = "\uc0dd\ud65c",
-  physical = "\uccb4\uc721",
-  "information and communication" = "\uc815\ubcf4\ud1b5\uc2e0",
-  medicine = "\uc758\ud559",
-  earth = "\uc9c0\uad6c",
-  construction = "\uac74\uc124",
-  "veterinary science" = "\uc218\uc758\ud559",
-  business = "\uacbd\uc601",
-  law = "\ubc95\ub960",
-  plant = "\uc2dd\ubb3c",
-  buddhism = "\ubd88\uad50",
-  "engineering general" = "\uacf5\ud559 \uc77c\ubc18",
-  folk = "\ubbfc\uc18d",
-  administration = "\ud589\uc815",
-  economic = "\uacbd\uc81c",
-  math = "\uc218\ud559",
-  "korean medicine" = "\ud55c\uc758\ud559",
-  military = "\uad70\uc0ac",
-  literature = "\ubb38\ud559",
-  clothes = "\ubcf5\uc2dd",
-  "religion normal" = "\uc885\uad50 \uc77c\ubc18",
-  animal = "\ub3d9\ubb3c",
-  agriculture = "\ub18d\uc5c5",
-  astronomy = "\ucc9c\ubb38",
-  transport = "\uad50\ud1b5",
-  "natural plain" = "\uc790\uc5f0 \uc77c\ubc18",
-  industry = "\uc0b0\uc5c5",
-  medium = "\ub9e4\uccb4",
-  political = "\uc815\uce58",
-  geography = "\uc9c0\ub9ac",
-  mining = "\uad11\uc5c5",
-  hearing = "\uccad\uac01",
-  fishing = "\uc218\uc0b0\uc5c5",
-  machinery = "\uae30\uacc4",
-  catholic = "\uac00\ud1a8\ub9ad",
-  "book title" = "\ucc45\uba85",
-  named = "\uace0\uc720\uba85 \uc77c\ubc18",
-  "electrical and electronic" = "\uc804\uae30\u00b7\uc804\uc790",
-  pharmacy = "\uc57d\ud559",
-  "art, music and physical" = "\uc608\uccb4\ub2a5 \uc77c\ubc18",
-  useless = "\ubb34\uc6a9",
-  ocean = "\ud574\uc591",
-  forestry = "\uc784\uc5c5",
-  christian = "\uae30\ub3c5\uad50",
-  craft = "\uacf5\uc608",
-  service = "\uc11c\ube44\uc2a4\uc5c5",
-  sports = "\uc6b4\ub3d9",
-  food = "\uc2dd\ud488",
-  art = "\ubbf8\uc220",
-  environment = "\ud658\uacbd",
-  video = "\uc601\uc0c1",
-  "natural resources" = "\ucc9c\uc5f0\uc790\uc6d0",
-  "industry general" = "\uc0b0\uc5c5 \uc77c\ubc18",
-  smoke = "\uc5f0\uae30",
-  philosophy = "\ucca0\ud559",
-  "health general" = "\ubcf4\uac74 \uc77c\ubc18",
-  "proper names general" = "\uace0\uc720\uba85 \uc77c\ubc18",
-  welfare = "\ubcf5\uc9c0",
-  material = "\uc7ac\ub8cc",
-  "humanities general" = "\uc778\ubb38 \uc77c\ubc18"
-)
-
-.hannlp_normalize_category_names <- function(category_dic_nms) {
-  if (length(category_dic_nms) == 0L) {
-    return(character())
-  }
-  out <- as.character(category_dic_nms)
-  mapped <- .hannlp_category_aliases[out]
-  out[!is.na(mapped)] <- unname(mapped[!is.na(mapped)])
-  out
-}
-
 .hannlp_read_zip_dic <- function(zip_path, dic_path) {
   if (!file.exists(zip_path)) {
     stop("dictionary zip file does not exist: ", zip_path, call. = FALSE)
@@ -226,99 +126,25 @@
   .hannlp_read_zip_dic(zip_path, file.path("data", "kE", "dic_user2.txt"))
 }
 
-.hannlp_niadic_db_path <- function() {
-  override <- Sys.getenv("HANNLP_NIADIC_DB", unset = "")
-  if (nzchar(override) && file.exists(override)) {
-    return(override)
-  }
-  bundled <- .hannlp_bundled_niadic_dir()
-  if (nzchar(bundled)) {
-    candidate <- file.path(bundled, "hangul.db")
-    if (file.exists(candidate)) {
-      return(candidate)
-    }
-  }
-  niadic_pkg <- system.file(package = "NIADic")
-  if (nzchar(niadic_pkg)) {
-    candidate <- file.path(niadic_pkg, "hangul.db")
-    if (file.exists(candidate)) {
-      return(candidate)
-    }
-  }
-  ""
-}
-
-.hannlp_niadic_rdata_path <- function() {
-  override <- Sys.getenv("HANNLP_NIADIC_RDATA", unset = "")
-  if (nzchar(override) && file.exists(override)) {
-    return(override)
-  }
-  bundled <- .hannlp_bundled_niadic_dir()
-  if (nzchar(bundled)) {
-    candidate <- file.path(bundled, "dics.RData")
-    if (file.exists(candidate)) {
-      return(candidate)
-    }
-  }
-  niadic_pkg <- system.file(package = "NIADic")
-  if (nzchar(niadic_pkg)) {
-    candidate <- file.path(niadic_pkg, "dics.RData")
-    if (file.exists(candidate)) {
-      return(candidate)
-    }
-  }
-  ""
-}
-
 .hannlp_read_niadic_table <- function(dic_name, category_dic_nms = "") {
-  niadic_ns <- .hannlp_optional_namespace("NIADic")
-  if (!is.null(niadic_ns) && exists("get_dic", envir = niadic_ns, inherits = FALSE)) {
-    dic <- get("get_dic", envir = niadic_ns)(dic_name)
-  } else {
-    db_path <- .hannlp_niadic_db_path()
-    rdata_path <- .hannlp_niadic_rdata_path()
-    if (nzchar(rdata_path)) {
-      e <- new.env(parent = emptyenv())
-      load(rdata_path, envir = e)
-      if (!exists(dic_name, envir = e, inherits = FALSE)) {
-        stop(sprintf("NIADic RData does not contain '%s' dictionary!", dic_name), call. = FALSE)
-      }
-      dic <- get(dic_name, envir = e, inherits = FALSE)
-    } else {
-      if (!nzchar(db_path)) {
-        stop("NIADic dictionary not found. Install NIADic, set HANNLP_NIADIC_RDATA to dics.RData, or set HANNLP_NIADIC_DB to hangul.db.", call. = FALSE)
-      }
-      rsqlite_ns <- .hannlp_optional_namespace("RSQLite")
-      if (is.null(rsqlite_ns)) {
-        stop("RSQLite is required to import NIADic hangul.db.", call. = FALSE)
-      }
-      conn <- get("dbConnect", envir = rsqlite_ns)(get("SQLite", envir = rsqlite_ns)(), db_path)
-      on.exit(get("dbDisconnect", envir = rsqlite_ns)(conn), add = TRUE)
-      tables <- get("dbListTables", envir = rsqlite_ns)(conn)
-      if (!(dic_name %in% tables)) {
-        stop(sprintf("NIADic does not contain '%s' dictionary!", dic_name), call. = FALSE)
-      }
-      dic <- get("dbGetQuery", envir = rsqlite_ns)(conn, sprintf("select * from %s", dic_name))
-    }
+  # HanNLP does not bundle or distribute NIADic data (it is CC BY-SA, which is
+  # incompatible with GPL). NIADic is usable only when the user has separately
+  # installed the optional 'NIADic' package and its namespace is already loaded
+  # in the current R session. No bundled data, file paths, or environment
+  # variable fallbacks are provided.
+  if (!isNamespaceLoaded("NIADic")) {
+    stop(
+      "NIADic dictionary not available. Install the optional 'NIADic' package and load it (library(NIADic)) before calling this function.",
+      call. = FALSE
+    )
   }
+  niadic_ns <- getNamespace("NIADic")
+  if (!exists("get_dic", envir = niadic_ns, inherits = FALSE)) {
+    stop("Loaded 'NIADic' namespace does not provide get_dic().", call. = FALSE)
+  }
+  dic <- get("get_dic", envir = niadic_ns)(dic_name)
   if (!all(c("term", "tag") %in% names(dic))) {
     stop("NIADic table does not contain term/tag columns.", call. = FALSE)
-  }
-  if (identical(dic_name, "woorimalsam") && "category" %in% names(dic)) {
-    if (length(category_dic_nms) > 0L && !identical(category_dic_nms, "") && !any(category_dic_nms %in% "all")) {
-      categories <- .hannlp_normalize_category_names(category_dic_nms)
-      eng_match <- if ("eng_cate" %in% names(dic)) dic$eng_cate %in% category_dic_nms else rep(FALSE, nrow(dic))
-      dic <- dic[dic$category %in% categories | eng_match, , drop = FALSE]
-    } else if (length(category_dic_nms) == 0L || identical(category_dic_nms, "")) {
-      if ("eng_cate" %in% names(dic)) {
-        eng_general <- dic$eng_cate %in% "general"
-        if (any(eng_general)) {
-          dic <- dic[eng_general, , drop = FALSE]
-        } else {
-          dic <- dic[dic$category %in% .hannlp_category_aliases[["general"]], , drop = FALSE]
-        }
-      }
-    }
   }
   out <- data.frame(term = as.character(dic$term), tag = as.character(dic$tag), stringsAsFactors = FALSE)
   out <- out[!is.na(out$term) & !is.na(out$tag) & !is.na(tags[out$tag]), , drop = FALSE]
@@ -485,7 +311,10 @@ mergeUserDic <- function(newUserDic, append = TRUE, verbose = FALSE, ask = FALSE
 
 #' Build HanNLP user dictionary
 #'
-#' @param ext_dic retained for KoNLP API compatibility; external dictionaries are not bundled yet
+#' @param ext_dic optional external dictionary names: `sejong`, `woorimalsam`, or `insighter`.
+#'   The `woorimalsam` and `insighter` dictionaries require the optional `NIADic`
+#'   package to be installed and loaded (`library(NIADic)`) in the current session;
+#'   HanNLP does not bundle NIADic data.
 #' @param category_dic_nms retained for KoNLP API compatibility
 #' @param user_dic user dictionary data.frame with term and KAIST tag columns
 #' @param replace_usr_dic replace existing user dictionary instead of appending
@@ -537,7 +366,11 @@ statDic <- function(which = "current", n = 6) {
 
 #' Get Dictionary
 #'
-#' @param dic_name one of `user_dic`, `system_dic`, or `analyzed_dic`
+#' @param dic_name one of `user_dic`, `system_dic`, `analyzed_dic`, `sejong`,
+#'   `woorimalsam`, or `insighter`. The `woorimalsam` and `insighter`
+#'   dictionaries require the optional `NIADic` package to be installed and
+#'   loaded (`library(NIADic)`) in the current session; HanNLP does not bundle
+#'   NIADic data.
 #' @return data.frame with dictionary terms and tags
 #' @export
 get_dictionary <- function(dic_name) {
@@ -580,7 +413,13 @@ useSystemDic <- function(backup = TRUE) {
 
 #' Use NIA dictionary
 #'
-#' @param which_dic retained for KoNLP API compatibility
+#' Replace the writable user dictionary with NIADic entries. HanNLP does not
+#' bundle or distribute NIADic data because it is released under CC BY-SA,
+#' which is incompatible with the GPL. This function works only when the
+#' optional `NIADic` package is installed and its namespace is already loaded
+#' in the current R session (e.g. after `library(NIADic)`); otherwise it errors.
+#'
+#' @param which_dic NIADic dictionaries to load: `woorimalsam`, `insighter`, or both
 #' @param category_dic_nms retained for KoNLP API compatibility
 #' @param backup backup current dictionary before switching
 #' @export

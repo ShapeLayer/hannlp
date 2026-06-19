@@ -13,13 +13,7 @@ summarized below.
    License: GNU General Public License, version 3 or later, as distributed
    with the JHanNanum materials.
 
-2. NIADic dictionary data (inst/modules/niadic).
-   Copyright: National Information Society Agency and contributors.
-   License: Creative Commons Attribution-ShareAlike 2.0 (CC BY-SA 2.0),
-   <https://creativecommons.org/licenses/by-sa/2.0/>.
-   Source: <https://github.com/haven-jeon/NIADic>.
-
-3. String buffer utilities (src/modules/hannanum/lib/hannanum/strbuf.c,
+2. String buffer utilities (src/modules/hannanum/lib/hannanum/strbuf.c,
    src/modules/hannanum/lib/hannanum/strbuf.h), derived from commonmark/cmark.
    Copyright: 2014, John MacFarlane.
    License: MIT.

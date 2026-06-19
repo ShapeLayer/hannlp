@@ -6,8 +6,7 @@ Authors@R: c(
     person("Jonghyeon", "Park", role = c("aut", "cre"), email = "shapelayer.dev@gmail.com"),
     person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),
     person("Taekyung", "Kim", role = "ctb"),
-    person("Semantic Web Research Center, KAIST", role = "cph"),
-    person("National Information Society Agency", role = "cph")
+    person("Semantic Web Research Center, KAIST", role = "cph")
   )
 Maintainer: Jonghyeon Park <shapelayer.dev@gmail.com>
 Description: Provides Korean morphological analysis, part-of-speech (POS)
@@ -17,8 +16,8 @@ Description: Provides Korean morphological analysis, part-of-speech (POS)
     backend is derived from the 'KoNLP' package and the 'HanNanum' analyzer,
     and is reimplemented in native C so that no Java runtime is required.
     Bundled dictionary and statistical resources allow analysis to work
-    out of the box, and optional dictionaries can be loaded from the
-    'Sejong' and 'NIADic' packages when they are installed.
+    out of the box, and optional dictionaries can be loaded at runtime from
+    the 'Sejong' and 'NIADic' packages when they are installed and loaded.
 License: GPL-3 + file LICENSE
 Copyright: See inst/COPYRIGHTS for bundled third-party code and data.
 URL: https://github.com/ShapeLayer/HanNLP
@@ -26,6 +25,5 @@ BugReports: https://github.com/ShapeLayer/HanNLP/issues
 Encoding: UTF-8
 Depends: R (>= 4.0.0)
 Imports: tools, utils
-Suggests: RSQLite
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
