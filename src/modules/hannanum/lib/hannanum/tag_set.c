@@ -179,7 +179,7 @@ check_phoneme_type(int phoneme_type, int phoneme)
 static int
 load_tag_set(hannanum_t *h)
 {
-  char *path = strbuf_join_path(h->data_dir, "kE/tag_set.txt");
+  char *path = hn_path_join(h->data_dir, "kE/tag_set.txt");
   FILE *fp;
   char line[4096];
   if (path == NULL) {
@@ -216,7 +216,7 @@ load_tag_set(hannanum_t *h)
         return 0;
       }
       h->tag_names = next;
-      h->tag_names[h->tag_count] = strbuf_strdup(name);
+      h->tag_names[h->tag_count] = hn_strdup(name);
       if (h->tag_names[h->tag_count] == NULL) {
         fclose(fp);
         return 0;
@@ -249,7 +249,7 @@ load_tag_set(hannanum_t *h)
         return 0;
       }
       h->tag_groups = next_groups;
-      h->tag_groups[h->tag_group_count].name = strbuf_strdup(name);
+      h->tag_groups[h->tag_group_count].name = hn_strdup(name);
       h->tag_groups[h->tag_group_count].ids = ids;
       h->tag_groups[h->tag_group_count].count = count;
       if (h->tag_groups[h->tag_group_count].name == NULL) {
@@ -269,7 +269,7 @@ load_tag_set(hannanum_t *h)
         return 0;
       }
       h->irregular_names = next;
-      h->irregular_names[h->irregular_count] = strbuf_strdup(name);
+      h->irregular_names[h->irregular_count] = hn_strdup(name);
       if (h->irregular_names[h->irregular_count] == NULL) {
         fclose(fp);
         return 0;

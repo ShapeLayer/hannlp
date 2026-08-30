@@ -2,17 +2,17 @@ static int
 candidate_signature(const eojeol_t *eojeol, char **out)
 {
   size_t i;
-  strbuf signature;
-  strbuf_init(&signature, 64);
+  struct strbuffer signature;
+  strbuffer_init(&signature, 64);
   for (i = 0; i < eojeol->length; i++) {
     if (i != 0) {
-      strbuf_putc(&signature, '+');
+      strbuffer_add_byte(&signature, '+');
     }
-    strbuf_puts(&signature, eojeol->morphemes[i]);
-    strbuf_putc(&signature, '/');
-    strbuf_puts(&signature, eojeol->tags[i]);
+    strbuffer_add_str(&signature, eojeol->morphemes[i]);
+    strbuffer_add_byte(&signature, '/');
+    strbuffer_add_str(&signature, eojeol->tags[i]);
   }
-  *out = (char *)strbuf_detach(&signature);
+  *out = (char *)strbuffer_steal(&signature);
   return 1;
 }
 

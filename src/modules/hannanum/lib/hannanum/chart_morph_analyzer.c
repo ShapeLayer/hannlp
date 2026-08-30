@@ -24,7 +24,7 @@ static dict_entry_t * dict_get_or_create(hannanum_t * h, const char *key){
   if (entry == NULL) {
     return NULL;
   }
-  entry->key = strbuf_strdup(key);
+  entry->key = hn_strdup(key);
   if (entry->key == NULL) {
     free(entry);
     return NULL;
@@ -56,7 +56,7 @@ prob_put(prob_entry_t * *table, const char *key, double value)
   if (entry == NULL) {
     return;
   }
-  entry->key = strbuf_strdup(key);
+  entry->key = hn_strdup(key);
   if (entry->key == NULL) {
     free(entry);
     return;
@@ -98,7 +98,7 @@ parse_analysis(const char *analysis, eojeol_t * out)
     return 0;
   }
   memset(out, 0, sizeof(*out));
-  copy = strbuf_strdup(analysis);
+  copy = hn_strdup(analysis);
   if (copy == NULL) {
     return 0;
   }
@@ -118,7 +118,7 @@ parse_analysis(const char *analysis, eojeol_t * out)
     return 0;
   }
   out->length = count;
-  copy = strbuf_strdup(analysis);
+  copy = hn_strdup(analysis);
   if (copy == NULL) {
     free_eojeol(out);
     return 0;
@@ -132,8 +132,8 @@ parse_analysis(const char *analysis, eojeol_t * out)
       return 0;
     }
     *slash = '\0';
-    out->morphemes[i] = strbuf_strdup(part);
-    out->tags[i] = strbuf_strdup(slash + 1);
+    out->morphemes[i] = hn_strdup(part);
+    out->tags[i] = hn_strdup(slash + 1);
     if (out->morphemes[i] == NULL || out->tags[i] == NULL) {
       free(copy);
       free_eojeol(out);
@@ -156,8 +156,8 @@ static eojeol_t make_single(const char *surface, const char *tag){
     memset(&e, 0, sizeof(e));
     return e;
   }
-  e.morphemes[0] = strbuf_strdup(surface);
-  e.tags[0] = strbuf_strdup(tag);
+  e.morphemes[0] = hn_strdup(surface);
+  e.tags[0] = hn_strdup(tag);
   if (e.morphemes[0] == NULL || e.tags[0] == NULL) {
     free_eojeol(&e);
     return e;
@@ -177,10 +177,10 @@ static eojeol_t make_pair(const char *first_surface, const char *first_tag, cons
     memset(&e, 0, sizeof(e));
     return e;
   }
-  e.morphemes[0] = strbuf_strdup(first_surface);
-  e.tags[0] = strbuf_strdup(first_tag);
-  e.morphemes[1] = strbuf_strdup(second_surface);
-  e.tags[1] = strbuf_strdup(second_tag);
+  e.morphemes[0] = hn_strdup(first_surface);
+  e.tags[0] = hn_strdup(first_tag);
+  e.morphemes[1] = hn_strdup(second_surface);
+  e.tags[1] = hn_strdup(second_tag);
   if (e.morphemes[0] == NULL || e.tags[0] == NULL || e.morphemes[1] == NULL || e.tags[1] == NULL) {
     free_eojeol(&e);
     return e;
@@ -205,8 +205,8 @@ make_parts(size_t count, const char **surfaces, const char **tags)
   }
   e.length = count;
   for (i = 0; i < count; i++) {
-    e.morphemes[i] = strbuf_strdup(surfaces[i]);
-    e.tags[i] = strbuf_strdup(tags[i]);
+    e.morphemes[i] = hn_strdup(surfaces[i]);
+    e.tags[i] = hn_strdup(tags[i]);
     if (e.morphemes[i] == NULL || e.tags[i] == NULL) {
       free_eojeol(&e);
       return e;
@@ -239,8 +239,8 @@ segment_stack_push(segment_stack_t * stack, const char *morpheme, const char *ta
     stack->tags = next_t;
     stack->capacity = new_capacity;
   }
-  stack->morphemes[stack->count] = strbuf_strdup(morpheme);
-  stack->tags[stack->count] = strbuf_strdup(tag);
+  stack->morphemes[stack->count] = hn_strdup(morpheme);
+  stack->tags[stack->count] = hn_strdup(tag);
   if (stack->morphemes[stack->count] == NULL || stack->tags[stack->count] == NULL) {
     free(stack->morphemes[stack->count]);
     free(stack->tags[stack->count]);
@@ -293,8 +293,8 @@ static eojeol_t eojeol_from_stack(const segment_stack_t * stack){
   }
   e.length = stack->count;
   for (i = 0; i < stack->count; i++) {
-    e.morphemes[i] = strbuf_strdup(stack->morphemes[i]);
-    e.tags[i] = strbuf_strdup(stack->tags[i]);
+    e.morphemes[i] = hn_strdup(stack->morphemes[i]);
+    e.tags[i] = hn_strdup(stack->tags[i]);
     if (e.morphemes[i] == NULL || e.tags[i] == NULL) {
       free_eojeol(&e);
       break;
@@ -382,7 +382,7 @@ segment_dfs(hannanum_t * h, const char *plain, size_t offset, segment_stack_t * 
     if (end < len && is_utf8_continuation((unsigned char)plain[end])) {
       continue;
     }
-    part = strbuf_substr(plain + offset, end - offset);
+    part = hn_strndup(plain + offset, end - offset);
     if (part == NULL) {
       return;
     }
@@ -427,7 +427,7 @@ append_segmented_candidates(hannanum_t * h, const char *plain, candidate_list_t 
 static void
 load_analyzed_dic(hannanum_t * h)
 {
-  char           *path = strbuf_join_path(h->data_dir, "kE/dic_analyzed.txt");
+  char           *path = hn_path_join(h->data_dir, "kE/dic_analyzed.txt");
   FILE           *fp;
   char            line[65536];
   if (path == NULL) {
@@ -479,7 +479,7 @@ load_analyzed_dic(hannanum_t * h)
 static void
 load_surface_dic(hannanum_t * h, const char *relative, hannanum_trie_t *trie)
 {
-  char           *path = strbuf_join_path(h->data_dir, relative);
+  char           *path = hn_path_join(h->data_dir, relative);
   FILE           *fp;
   char            line[65536];
   if (path == NULL) {
@@ -530,7 +530,7 @@ load_surface_dic(hannanum_t * h, const char *relative, hannanum_trie_t *trie)
 static void
 load_probability(hannanum_t * h, prob_entry_t * *table, const char *relative)
 {
-  char           *path = strbuf_join_path(h->data_dir, relative);
+  char           *path = hn_path_join(h->data_dir, relative);
   FILE           *fp;
   char            line[4096];
   if (path == NULL) {
@@ -750,10 +750,10 @@ append_ascii_abbreviation_candidate(const char *plain, candidate_list_t * list)
     }
     letter[0] = plain[i];
     letter[1] = '\0';
-    e.morphemes[count] = strbuf_strdup(letter);
-    e.tags[count++] = strbuf_strdup("f");
-    e.morphemes[count] = strbuf_strdup(".");
-    e.tags[count++] = strbuf_strdup("sf");
+    e.morphemes[count] = hn_strdup(letter);
+    e.tags[count++] = hn_strdup("f");
+    e.morphemes[count] = hn_strdup(".");
+    e.tags[count++] = hn_strdup("sf");
   }
   for (i = 0; i < e.length; i++) {
     if (e.morphemes[i] == NULL || e.tags[i] == NULL) {
@@ -789,8 +789,8 @@ append_repeated_punctuation_candidate(const char *plain, candidate_list_t * list
     char            mark[2];
     mark[0] = plain[i];
     mark[1] = '\0';
-    e.morphemes[i] = strbuf_strdup(mark);
-    e.tags[i] = strbuf_strdup("sf");
+    e.morphemes[i] = hn_strdup(mark);
+    e.tags[i] = hn_strdup("sf");
     if (e.morphemes[i] == NULL || e.tags[i] == NULL) {
       free_eojeol(&e);
       return 0;
@@ -816,8 +816,8 @@ append_email_head_candidate(const char *plain, candidate_list_t * list)
   if (at == NULL || dot == NULL || dot < at || dot[1] != '\0' || at == plain || at + 1 == dot) {
     return 0;
   }
-  local = strbuf_substr(plain, (size_t) (at - plain));
-  domain = strbuf_substr(at + 1, (size_t) (dot - at - 1));
+  local = hn_strndup(plain, (size_t) (at - plain));
+  domain = hn_strndup(at + 1, (size_t) (dot - at - 1));
   if (local == NULL || domain == NULL) {
     free(local);
     free(domain);
@@ -874,7 +874,7 @@ append_korean_number_candidate(const char *plain, candidate_list_t *list)
       free_eojeol(&e);
       return 0;
     }
-    syllable = strbuf_substr((const char *)p, width);
+    syllable = hn_strndup((const char *)p, width);
     if (syllable == NULL) {
       free_eojeol(&e);
       return 0;
@@ -905,7 +905,7 @@ append_korean_number_candidate(const char *plain, candidate_list_t *list)
       capacity = new_capacity;
     }
     e.morphemes[count] = syllable;
-    e.tags[count] = strbuf_strdup(tag);
+    e.tags[count] = hn_strdup(tag);
     if (e.tags[count] == NULL) {
       free_eojeol(&e);
       return 0;
@@ -976,7 +976,7 @@ append_parenthesized_prefix_candidate(hannanum_t *h, const char *plain, candidat
   if (plain[0] != '(' || close == NULL || close[1] == '\0') {
     return 0;
   }
-  prefix = strbuf_substr(plain, (size_t)(close - plain + 1));
+  prefix = hn_strndup(plain, (size_t)(close - plain + 1));
   if (prefix == NULL) {
     return 0;
   }
@@ -1086,11 +1086,11 @@ stem_without_final_jong(const char *plain, size_t syllable_offset, size_t syllab
     return NULL;
   }
   without_final = cp - (index % 28);
-  if (!strbuf_append_to_cstr(&stem, &used, &capacity, plain, syllable_offset)) {
+  if (!hn_str_append(&stem, &used, &capacity, plain, syllable_offset)) {
     free(stem);
     return NULL;
   }
-  if (!strbuf_append_utf8_to_cstr(&stem, &used, &capacity, without_final)) {
+  if (!hn_str_append_utf8(&stem, &used, &capacity, without_final)) {
     free(stem);
     return NULL;
   }
@@ -1103,7 +1103,7 @@ append_conjugation_candidates(hannanum_t *h, const char *plain, candidate_list_t
   size_t len = strlen(plain);
   int added = 0;
   if (len > 3 && strcmp(plain + len - strlen("고"), "고") == 0) {
-    char *stem = strbuf_substr(plain, len - strlen("고"));
+    char *stem = hn_strndup(plain, len - strlen("고"));
     if (stem != NULL) {
       if (append_stem_ending_candidate(h, list, stem, "고", "ecs")) {
         added = 1;
@@ -1112,7 +1112,7 @@ append_conjugation_candidates(hannanum_t *h, const char *plain, candidate_list_t
     }
   }
   if (len > 3 && strcmp(plain + len - strlen("라"), "라") == 0) {
-    char *stem = strbuf_substr(plain, len - strlen("라"));
+    char *stem = hn_strndup(plain, len - strlen("라"));
     if (stem != NULL) {
       if (entry_has_yong_tag(dict_find(h->dict, stem)) && hangul_has_positive_vowel(stem)) {
         if (append_stem_ending_candidate(h, list, stem, "아", "ecs")) {
@@ -1156,7 +1156,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
   size_t          i;
   eojeol_t        e;
   if (len > 1 && plain[len - 1] == ':') {
-    char           *base = strbuf_substr(plain, len - 1);
+    char           *base = hn_strndup(plain, len - 1);
     if (base == NULL) {
       return 0;
     }
@@ -1225,7 +1225,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     return 1;
   }
   if (len >= 2 && plain[0] == '"' && plain[len - 1] == '"') {
-    char           *inner = strbuf_substr(plain + 1, len - 2);
+    char           *inner = hn_strndup(plain + 1, len - 2);
     const char     *surfaces[3];
     const char     *tags[3] = { "sl", "ncn", "sr" };
     if (inner == NULL) {
@@ -1242,7 +1242,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     }
   }
   if (len >= 2 && plain[0] == '\'' && plain[len - 1] == '\'') {
-    char           *inner = strbuf_substr(plain + 1, len - 2);
+    char           *inner = hn_strndup(plain + 1, len - 2);
     const char     *surfaces[3];
     const char     *tags[3] = { "sl", "ncn", "sr" };
     if (inner == NULL) {
@@ -1259,7 +1259,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     }
   }
   if (len > 1 && plain[len - 1] == '%' && is_ascii_digits(plain, len - 1)) {
-    char           *number = strbuf_substr(plain, len - 1);
+    char           *number = hn_strndup(plain, len - 1);
     if (number == NULL) {
       return 0;
     }
@@ -1271,7 +1271,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     }
   }
   if (len > 1 && plain[len - 1] == '.' && strchr(plain, ',') != NULL) {
-    char           *number = strbuf_substr(plain, len - 1);
+    char           *number = hn_strndup(plain, len - 1);
     if (number == NULL) {
       return 0;
     }
@@ -1297,7 +1297,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     return 1;
   }
   if (len > 1 && plain[len - 1] == '.') {
-    char           *number = strbuf_substr(plain, len);
+    char           *number = hn_strndup(plain, len);
     if (number == NULL) {
       return 0;
     }
@@ -1328,7 +1328,7 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     }
   }
   if (i > 0 && i < len && is_ascii_digits(plain, i) && is_number_unit(plain + i)) {
-    char           *number = strbuf_substr(plain, i);
+    char           *number = hn_strndup(plain, i);
     if (number == NULL) {
       return 0;
     }

@@ -74,7 +74,7 @@ split_eojeols(const char *input, str_vec_t * out)
     }
     len = (size_t) (p - start);
     if (len > 6 && memcmp(start + len - 6, "......", 6) == 0) {
-      token = strbuf_substr(start, len - 6);
+      token = hn_strndup(start, len - 6);
       if (token == NULL) {
         return 0;
       }
@@ -82,7 +82,7 @@ split_eojeols(const char *input, str_vec_t * out)
         free(token);
         return 0;
       }
-      token = strbuf_substr(start + len - 6, 5);
+      token = hn_strndup(start + len - 6, 5);
       if (token == NULL) {
         return 0;
       }
@@ -90,7 +90,7 @@ split_eojeols(const char *input, str_vec_t * out)
         free(token);
         return 0;
       }
-      token = strbuf_substr(start + len - 1, 1);
+      token = hn_strndup(start + len - 1, 1);
       if (token == NULL) {
         return 0;
       }
@@ -102,7 +102,7 @@ split_eojeols(const char *input, str_vec_t * out)
     }
     if (find_sentence_segmentor_split(start, len, &eos_prefix_len, &eos_symbol_len)) {
       if (eos_symbol_len == 1 && start[eos_prefix_len] == '.' && eos_prefix_len > 0 && isdigit((unsigned char)start[eos_prefix_len - 1]) && eos_prefix_len + 1 == len) {
-        token = strbuf_substr(start, len);
+        token = hn_strndup(start, len);
         if (token == NULL) {
           return 0;
         }
@@ -113,7 +113,7 @@ split_eojeols(const char *input, str_vec_t * out)
         continue;
       }
       if (eos_symbol_len == 1 && start[eos_prefix_len] == '.' && memchr(start, ',', eos_prefix_len) != NULL) {
-        token = strbuf_substr(start, eos_prefix_len + 1);
+        token = hn_strndup(start, eos_prefix_len + 1);
         if (token == NULL) {
           return 0;
         }
@@ -122,7 +122,7 @@ split_eojeols(const char *input, str_vec_t * out)
           return 0;
         }
         if (eos_prefix_len + 1 < len) {
-          token = strbuf_substr(start + eos_prefix_len + 1, len - eos_prefix_len - 1);
+          token = hn_strndup(start + eos_prefix_len + 1, len - eos_prefix_len - 1);
           if (token == NULL) {
             return 0;
           }
@@ -134,7 +134,7 @@ split_eojeols(const char *input, str_vec_t * out)
         continue;
       }
       if (eos_prefix_len > 0) {
-        token = strbuf_substr(start, eos_prefix_len);
+        token = hn_strndup(start, eos_prefix_len);
         if (token == NULL) {
           return 0;
         }
@@ -143,7 +143,7 @@ split_eojeols(const char *input, str_vec_t * out)
           return 0;
         }
       }
-      token = strbuf_substr(start + eos_prefix_len, eos_symbol_len);
+      token = hn_strndup(start + eos_prefix_len, eos_symbol_len);
       if (token == NULL) {
         return 0;
       }
@@ -152,7 +152,7 @@ split_eojeols(const char *input, str_vec_t * out)
         return 0;
       }
       if (eos_prefix_len + eos_symbol_len < len) {
-        token = strbuf_substr(start + eos_prefix_len + eos_symbol_len, len - eos_prefix_len - eos_symbol_len);
+        token = hn_strndup(start + eos_prefix_len + eos_symbol_len, len - eos_prefix_len - eos_symbol_len);
         if (token == NULL) {
           return 0;
         }
@@ -164,7 +164,7 @@ split_eojeols(const char *input, str_vec_t * out)
       continue;
     }
     if (len > 3 && memcmp(start + len - 3, "...", 3) == 0) {
-      token = strbuf_substr(start, len - 3);
+      token = hn_strndup(start, len - 3);
       if (token == NULL) {
         return 0;
       }
@@ -172,7 +172,7 @@ split_eojeols(const char *input, str_vec_t * out)
         free(token);
         return 0;
       }
-      token = strbuf_substr(start + len - 3, 3);
+      token = hn_strndup(start + len - 3, 3);
       if (token == NULL) {
         return 0;
       }
@@ -183,7 +183,7 @@ split_eojeols(const char *input, str_vec_t * out)
       continue;
     }
     if (len > 2 && (start[len - 2] == '?' || start[len - 2] == '!') && (start[len - 1] == '?' || start[len - 1] == '!')) {
-      token = strbuf_substr(start, len - 2);
+      token = hn_strndup(start, len - 2);
       if (token == NULL) {
         return 0;
       }
@@ -191,7 +191,7 @@ split_eojeols(const char *input, str_vec_t * out)
         free(token);
         return 0;
       }
-      token = strbuf_substr(start + len - 2, 2);
+      token = hn_strndup(start + len - 2, 2);
       if (token == NULL) {
         return 0;
       }
@@ -205,7 +205,7 @@ split_eojeols(const char *input, str_vec_t * out)
       size_t          email_dot;
       for (email_dot = 1; email_dot + 1 < len; email_dot++) {
         if (start[email_dot] == '.' && memchr(start, '@', email_dot) != NULL) {
-          token = strbuf_substr(start, email_dot + 1);
+          token = hn_strndup(start, email_dot + 1);
           if (token == NULL) {
             return 0;
           }
@@ -213,7 +213,7 @@ split_eojeols(const char *input, str_vec_t * out)
             free(token);
             return 0;
           }
-          token = strbuf_substr(start + email_dot + 1, len - email_dot - 1);
+          token = hn_strndup(start + email_dot + 1, len - email_dot - 1);
           if (token == NULL) {
             return 0;
           }
@@ -237,7 +237,7 @@ split_eojeols(const char *input, str_vec_t * out)
       for (j = split_at + 1; j < len && isdigit((unsigned char)start[j]); j++) {
       }
       if (j < len) {
-        token = strbuf_substr(start, split_at + 1);
+        token = hn_strndup(start, split_at + 1);
         if (token == NULL) {
           return 0;
         }
@@ -245,7 +245,7 @@ split_eojeols(const char *input, str_vec_t * out)
           free(token);
           return 0;
         }
-        token = strbuf_substr(start + split_at + 1, len - split_at - 1);
+        token = hn_strndup(start + split_at + 1, len - split_at - 1);
         if (token == NULL) {
           return 0;
         }
@@ -261,7 +261,7 @@ split_eojeols(const char *input, str_vec_t * out)
       continue;
     }
     if (len > 1 && strchr(".!?", start[len - 1]) != NULL && !(start[len - 1] == '.' && len > 1 && isalpha((unsigned char)start[len - 2]))) {
-      token = strbuf_substr(start, len - 1);
+      token = hn_strndup(start, len - 1);
       if (token == NULL) {
         return 0;
       }
@@ -269,7 +269,7 @@ split_eojeols(const char *input, str_vec_t * out)
         free(token);
         return 0;
       }
-      token = strbuf_substr(start + len - 1, 1);
+      token = hn_strndup(start + len - 1, 1);
       if (token == NULL) {
         return 0;
       }
@@ -279,7 +279,7 @@ split_eojeols(const char *input, str_vec_t * out)
       }
       continue;
     }
-    token = strbuf_substr(start, len);
+    token = hn_strndup(start, len);
     if (token == NULL) {
       return 0;
     }

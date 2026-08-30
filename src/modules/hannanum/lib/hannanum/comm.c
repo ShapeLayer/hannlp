@@ -35,8 +35,8 @@ static eojeol_t clone_eojeol(const eojeol_t * src){
   }
   dst.length = src->length;
   for (i = 0; i < src->length; i++) {
-    dst.morphemes[i] = strbuf_strdup(src->morphemes[i]);
-    dst.tags[i] = strbuf_strdup(src->tags[i]);
+    dst.morphemes[i] = hn_strdup(src->morphemes[i]);
+    dst.tags[i] = hn_strdup(src->tags[i]);
     if (dst.morphemes[i] == NULL || dst.tags[i] == NULL) {
       free_eojeol(&dst);
       break;

@@ -30,7 +30,7 @@ utf8_decode_one(const unsigned char *s, unsigned int *codepoint, size_t *width)
   return 0;
 }
 
-#include "strbuf.c"
+#include "strbuffer.c"
 #include "code.c"
 #include "trie.c"
 

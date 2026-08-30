@@ -1,6 +1,9 @@
 .DS_store
+build/
 build-*/
 
+# check-cran-tarball.sh
+cran-submission/
 
 # History files
 .Rhistory

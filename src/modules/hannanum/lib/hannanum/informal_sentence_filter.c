@@ -44,7 +44,7 @@ filter_informal_word(const char *word, size_t len, char **buffer, size_t *used, 
   }
   check_start = word;
   check_len = (size_t)utf8_char_width_from_first((unsigned char)word[0]);
-  if (!strbuf_append_to_cstr(buffer, used, capacity, check_start, check_len)) {
+  if (!hn_str_append(buffer, used, capacity, check_start, check_len)) {
     return 0;
   }
   pos = check_len;
@@ -56,26 +56,26 @@ filter_informal_word(const char *word, size_t len, char **buffer, size_t *used, 
     }
     if (current_len == check_len && memcmp(check_start, current, current_len) == 0) {
       if (repeat_count == 4) {
-        if (!strbuf_append_to_cstr(buffer, used, capacity, " ", 1)) {
+        if (!hn_str_append(buffer, used, capacity, " ", 1)) {
           return 0;
         }
-        if (!strbuf_append_to_cstr(buffer, used, capacity, current, current_len)) {
+        if (!hn_str_append(buffer, used, capacity, current, current_len)) {
           return 0;
         }
         repeat_count = 0;
       } else {
-        if (!strbuf_append_to_cstr(buffer, used, capacity, current, current_len)) {
+        if (!hn_str_append(buffer, used, capacity, current, current_len)) {
           return 0;
         }
         repeat_count++;
       }
     } else {
       if (check_len == 1 && check_start[0] == '.') {
-        if (!strbuf_append_to_cstr(buffer, used, capacity, " ", 1)) {
+        if (!hn_str_append(buffer, used, capacity, " ", 1)) {
           return 0;
         }
       }
-      if (!strbuf_append_to_cstr(buffer, used, capacity, current, current_len)) {
+      if (!hn_str_append(buffer, used, capacity, current, current_len)) {
         return 0;
       }
       check_start = current;
@@ -116,17 +116,17 @@ informal_sentence_filter(const char *input)
         free(buffer);
         return NULL;
       }
-    } else if (!strbuf_append_to_cstr(&buffer, &used, &capacity, start, len)) {
+    } else if (!hn_str_append(&buffer, &used, &capacity, start, len)) {
       free(buffer);
       return NULL;
     }
-    if (!strbuf_append_to_cstr(&buffer, &used, &capacity, " ", 1)) {
+    if (!hn_str_append(&buffer, &used, &capacity, " ", 1)) {
       free(buffer);
       return NULL;
     }
   }
   if (buffer == NULL) {
-    buffer = strbuf_strdup("");
+    buffer = hn_strdup("");
   }
   return buffer;
 }

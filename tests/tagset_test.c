@@ -67,7 +67,7 @@ typedef struct hannanum {
   unsigned char *connections;
 } hannanum_t;
 
-#include "strbuf.c"
+#include "strbuffer.c"
 #include "share.c"
 #include "tag_set.c"
 

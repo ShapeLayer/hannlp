@@ -1,7 +1,7 @@
 Package: HanNLP
 Type: Package
 Title: Korean Morphological Analysis and Hangul Utilities
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Jonghyeon", "Park", role = c("aut", "cre"), email = "shapelayer.dev@gmail.com"),
     person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),

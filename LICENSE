@@ -13,11 +13,8 @@ summarized below.
    License: GNU General Public License, version 3 or later, as distributed
    with the JHanNanum materials.
 
-2. String buffer utilities (src/modules/hannanum/lib/hannanum/strbuf.c,
-   src/modules/hannanum/lib/hannanum/strbuf.h), derived from commonmark/cmark.
-   Copyright: 2014, John MacFarlane.
-   License: MIT.
-   Source: <https://github.com/commonmark/cmark>.
+2. HanNLP's native glue code and string helpers are distributed under the
+   package license, GNU General Public License, version 3 or later.
 
 The original copyright and license notices are retained in the bundled
 source and data files.

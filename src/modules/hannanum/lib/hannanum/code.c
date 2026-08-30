@@ -191,38 +191,38 @@ hannanum_code_from_triple(const codepoint_vec_t *triple)
           jong = triple->items[i] - 0x11a7;
           i++;
         }
-        if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, 0xac00 + (cho * 21 * 28) + (jung * 28) + jong)) {
+        if (!hn_str_append_utf8(&out, &used, &capacity, 0xac00 + (cho * 21 * 28) + (jung * 28) + jong)) {
           free(out);
           return NULL;
         }
       } else {
         unsigned int compat = choseong_compat[cho];
         if (compat != 0x3143 && compat != 0x3149 && compat != 0x3138) {
-          if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, '^')) {
+          if (!hn_str_append_utf8(&out, &used, &capacity, '^')) {
             free(out);
             return NULL;
           }
         }
-        if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, compat)) {
+        if (!hn_str_append_utf8(&out, &used, &capacity, compat)) {
           free(out);
           return NULL;
         }
         i++;
       }
     } else if (hannanum_code_is_jungseong(c)) {
-      if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, c - 0x1161 + 0x314f)) {
+      if (!hn_str_append_utf8(&out, &used, &capacity, c - 0x1161 + 0x314f)) {
         free(out);
         return NULL;
       }
       i++;
     } else if (hannanum_code_is_jongseong(c)) {
-      if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, jongseong_compat[c - 0x11a7])) {
+      if (!hn_str_append_utf8(&out, &used, &capacity, jongseong_compat[c - 0x11a7])) {
         free(out);
         return NULL;
       }
       i++;
     } else {
-      if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, c)) {
+      if (!hn_str_append_utf8(&out, &used, &capacity, c)) {
         free(out);
         return NULL;
       }
@@ -230,7 +230,7 @@ hannanum_code_from_triple(const codepoint_vec_t *triple)
     }
   }
   if (out == NULL) {
-    out = strbuf_strdup("");
+    out = hn_strdup("");
   }
   return out;
 }

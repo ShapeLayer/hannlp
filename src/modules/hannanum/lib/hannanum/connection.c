@@ -1,7 +1,7 @@
 static int
 parse_connection_side(hannanum_t *h, const char *expr, int **items, size_t *count)
 {
-  char *copy = strbuf_strdup(expr);
+  char *copy = hn_strdup(expr);
   char *token;
   char *save = NULL;
   size_t capacity = h->tag_count;
@@ -69,7 +69,7 @@ load_connections(hannanum_t *h)
   if (h->connections == NULL) {
     return 0;
   }
-  path = strbuf_join_path(h->data_dir, "kE/connections.txt");
+  path = hn_path_join(h->data_dir, "kE/connections.txt");
   if (path == NULL) {
     return 0;
   }

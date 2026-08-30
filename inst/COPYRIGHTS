@@ -15,11 +15,3 @@ the JHanNanum materials. The upstream JHanNanum distribution states that
 JHanNanum is distributed under GPLv3 and includes resources and configuration
 files as part of the distribution.
 Location: inst/modules/hannanum/inst/hannanum-data
-
-String buffer utilities (cmark-derived)
-Copyright: 2014, John MacFarlane
-License: MIT
-Location: src/modules/hannanum/lib/hannanum/strbuf.c, strbuf.h
-Source: https://github.com/commonmark/cmark
-The original MIT copyright and permission notice is retained in the bundled
-source file headers.

@@ -4,42 +4,42 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "strbuf.h"
+#include "strbuffer.h"
 
 static char    *
 read_stdin(void)
 {
-  strbuf          buffer;
-  strbuf_init(&buffer, 4096);
+  struct strbuffer          buffer;
+  strbuffer_init(&buffer, 4096);
   for (;;) {
     unsigned char   chunk[2048];
     size_t          n;
     n = fread(chunk, 1, sizeof(chunk), stdin);
-    strbuf_put(&buffer, chunk, (bufsize_t)n);
+    strbuffer_add(&buffer, chunk, (size_t)n);
     if (n < 2048) {
       if (ferror(stdin)) {
-        strbuf_free(&buffer);
+        strbuffer_release(&buffer);
         return NULL;
       }
       break;
     }
   }
-  return (char *)strbuf_detach(&buffer);
+  return (char *)strbuffer_steal(&buffer);
 }
 
 static char    *
 join_args(int argc, char **argv, int start)
 {
   int             i;
-  strbuf          text;
-  strbuf_init(&text, 128);
+  struct strbuffer          text;
+  strbuffer_init(&text, 128);
   for (i = start; i < argc; i++) {
     if (i != start) {
-      strbuf_putc(&text, ' ');
+      strbuffer_add_byte(&text, ' ');
     }
-    strbuf_puts(&text, argv[i]);
+    strbuffer_add_str(&text, argv[i]);
   }
-  return (char *)strbuf_detach(&text);
+  return (char *)strbuffer_steal(&text);
 }
 
 static void

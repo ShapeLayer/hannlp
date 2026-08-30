@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "strbuf.h"
+#include "strbuffer.h"
 
 #define HANNANUM_HASH_SIZE 262144u
 #define HANNANUM_DEFAULT_PROB (-20.0)
@@ -116,7 +116,7 @@ typedef struct {
 
 static void free_eojeol(eojeol_t *e);
 
-#include "strbuf.c"
+#include "strbuffer.c"
 #include "share.h"
 #include "share.c"
 #include "code.h"

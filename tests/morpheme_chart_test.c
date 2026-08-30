@@ -117,7 +117,7 @@ free_candidate_list(candidate_list_t *list)
   memset(list, 0, sizeof(*list));
 }
 
-#include "strbuf.c"
+#include "strbuffer.c"
 #include "code.c"
 #include "trie.c"
 #include "number_dic.c"

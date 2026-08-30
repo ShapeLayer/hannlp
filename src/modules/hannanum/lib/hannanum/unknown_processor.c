@@ -14,13 +14,13 @@ unknown_processor_expand_list(candidate_list_t *list)
         eojeol_t clone = clone_eojeol(&list->items[i]);
         if (clone.length > 0) {
           free(clone.tags[j]);
-          clone.tags[j] = strbuf_strdup("nqq");
+          clone.tags[j] = hn_strdup("nqq");
           if (clone.tags[j] == NULL || !candidate_list_add(list, clone)) {
             free_eojeol(&clone);
           }
         }
         free(list->items[i].tags[j]);
-        list->items[i].tags[j] = strbuf_strdup("ncn");
+        list->items[i].tags[j] = hn_strdup("ncn");
       }
     }
   }

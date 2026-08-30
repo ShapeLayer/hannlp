@@ -5,7 +5,7 @@ hannanum_create(const hannanum_options_t * options)
   if (h == NULL) {
     return NULL;
   }
-  h->data_dir = strbuf_strdup(options != NULL && options->data_dir != NULL ? options->data_dir : "../JHanNanum-0.8.4-en/JHanNanum/data");
+  h->data_dir = hn_strdup(options != NULL && options->data_dir != NULL ? options->data_dir : "../JHanNanum-0.8.4-en/JHanNanum/data");
   h->output_mode = options != NULL ? options->output_mode : HANNANUM_OUTPUT_HMM_POS;
   h->dict = (dict_entry_t * *) calloc(HANNANUM_HASH_SIZE, sizeof(dict_entry_t *));
   h->pwt = (prob_entry_t * *) calloc(HANNANUM_HASH_SIZE, sizeof(prob_entry_t *));
@@ -149,7 +149,7 @@ hannanum_analyze(hannanum_t * h, const char *input)
     }
     for (i = 0; i < result->count; i++) {
       size_t j;
-      result->plain[i] = strbuf_strdup(tokens.items[i]);
+      result->plain[i] = hn_strdup(tokens.items[i]);
       for (j = 0; j < sets[i].count; j++) {
         eojeol_t candidate = clone_eojeol(&sets[i].items[j]);
         if (candidate.length > 0 && !candidate_list_add(&result->candidate_sets[i], candidate)) {
@@ -203,7 +203,7 @@ hannanum_analyze(hannanum_t * h, const char *input)
     return NULL;
   }
   for (i = 0; i < result->count; i++) {
-    result->plain[i] = strbuf_strdup(tokens.items[i]);
+    result->plain[i] = hn_strdup(tokens.items[i]);
     result->eojeols[i] = clone_eojeol(&sets[i].items[selected[i]]);
   }
   if (h->output_mode == HANNANUM_OUTPUT_SIMPLE_POS_09 && !simple_pos_process_result(result, 1)) {
@@ -324,49 +324,49 @@ char           *
 hannanum_result_format(const hannanum_result_t * result)
 {
   size_t          i;
-  strbuf          out;
+  struct strbuffer          out;
   if (result == NULL) {
     return NULL;
   }
-  strbuf_init(&out, 256);
+  strbuffer_init(&out, 256);
   if (result->candidate_sets != NULL) {
     for (i = 0; i < result->count; i++) {
       size_t j;
-      strbuf_puts(&out, result->plain[i]);
-      strbuf_putc(&out, '\n');
+      strbuffer_add_str(&out, result->plain[i]);
+      strbuffer_add_byte(&out, '\n');
       for (j = 0; j < result->candidate_sets[i].count; j++) {
         size_t k;
-        strbuf_putc(&out, '\t');
+        strbuffer_add_byte(&out, '\t');
         for (k = 0; k < result->candidate_sets[i].items[j].length; k++) {
           if (k != 0) {
-            strbuf_putc(&out, '+');
+            strbuffer_add_byte(&out, '+');
           }
-          strbuf_puts(&out, result->candidate_sets[i].items[j].morphemes[k]);
-          strbuf_putc(&out, '/');
-          strbuf_puts(&out, result->candidate_sets[i].items[j].tags[k]);
+          strbuffer_add_str(&out, result->candidate_sets[i].items[j].morphemes[k]);
+          strbuffer_add_byte(&out, '/');
+          strbuffer_add_str(&out, result->candidate_sets[i].items[j].tags[k]);
         }
-        strbuf_putc(&out, '\n');
+        strbuffer_add_byte(&out, '\n');
       }
-      strbuf_putc(&out, '\n');
+      strbuffer_add_byte(&out, '\n');
     }
-    return (char *)strbuf_detach(&out);
+    return (char *)strbuffer_steal(&out);
   }
   for (i = 0; i < result->count; i++) {
     size_t          j;
-    strbuf_puts(&out, result->plain[i]);
-    strbuf_puts(&out, "\n\t");
+    strbuffer_add_str(&out, result->plain[i]);
+    strbuffer_add_str(&out, "\n\t");
     for (j = 0; j < result->eojeols[i].length; j++) {
       if (j != 0) {
-        strbuf_putc(&out, '+');
+        strbuffer_add_byte(&out, '+');
       }
-      strbuf_puts(&out, result->eojeols[i].morphemes[j]);
-      strbuf_putc(&out, '/');
-      strbuf_puts(&out, result->eojeols[i].tags[j]);
+      strbuffer_add_str(&out, result->eojeols[i].morphemes[j]);
+      strbuffer_add_byte(&out, '/');
+      strbuffer_add_str(&out, result->eojeols[i].tags[j]);
     }
-    strbuf_puts(&out, "\n\n");
+    strbuffer_add_str(&out, "\n\n");
     if (result->eojeols[i].length == 1 && strcmp(result->eojeols[i].tags[0], "sf") == 0) {
-      strbuf_putc(&out, '\n');
+      strbuffer_add_byte(&out, '\n');
     }
   }
-  return (char *)strbuf_detach(&out);
+  return (char *)strbuffer_steal(&out);
 }

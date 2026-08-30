@@ -5,6 +5,7 @@
 ^cran-submission[.]tar[.]gz$
 ^cran-comments-input(/|$)
 ^inst/\.gitkeep$
+^build(/|$)
 ^build-.*/
 ^src/.*\.(o|so|dll|dylib)$
 ^.*\.Rcheck$

@@ -1,7 +1,7 @@
 static int
 replace_morpheme(eojeol_t * e, size_t index, const char *morpheme)
 {
-  char           *replacement = strbuf_strdup(morpheme);
+  char           *replacement = hn_strdup(morpheme);
   if (replacement == NULL) {
     return 0;
   }
@@ -33,17 +33,17 @@ drop_initial_eu_from_morpheme(const char *morpheme)
     return NULL;
   }
   if (jong != 0) {
-    if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, jongseong_compat[jong])) {
+    if (!hn_str_append_utf8(&out, &used, &capacity, jongseong_compat[jong])) {
       free(out);
       return NULL;
     }
   } else if (cho < sizeof(choseong_compat) / sizeof(choseong_compat[0])) {
-    if (!strbuf_append_utf8_to_cstr(&out, &used, &capacity, choseong_compat[cho])) {
+    if (!hn_str_append_utf8(&out, &used, &capacity, choseong_compat[cho])) {
       free(out);
       return NULL;
     }
   }
-  if (!strbuf_append_to_cstr(&out, &used, &capacity, morpheme + width, strlen(morpheme + width))) {
+  if (!hn_str_append(&out, &used, &capacity, morpheme + width, strlen(morpheme + width))) {
     free(out);
     return NULL;
   }

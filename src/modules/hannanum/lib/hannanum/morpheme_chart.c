@@ -46,12 +46,12 @@ static char * HANNANUM_UNUSED
 morpheme_chart_pre_replace(morpheme_chart_t *chart, const char *input)
 {
   const unsigned char *p = (const unsigned char *)input;
-  strbuf result;
-  strbuf current;
+  struct strbuffer result;
+  struct strbuffer current;
   int eng_flag = 0;
   int chi_flag = 0;
-  strbuf_init(&result, (bufsize_t)strlen(input));
-  strbuf_init(&current, 32);
+  strbuffer_init(&result, (size_t)strlen(input));
+  strbuffer_init(&current, 32);
   if (chart != NULL) {
     chart->eng_replacement_count = 0;
     chart->chi_replacement_count = 0;
@@ -60,72 +60,72 @@ morpheme_chart_pre_replace(morpheme_chart_t *chart, const char *input)
     unsigned int c;
     size_t width;
     if (!utf8_decode_one(p, &c, &width)) {
-      strbuf_free(&result);
-      strbuf_free(&current);
+      strbuffer_release(&result);
+      strbuffer_release(&current);
       return NULL;
     }
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
       if (!eng_flag) {
         if (chi_flag && chart != NULL) {
           if (chart->chi_replacement_count < 128) {
-            chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuf_detach(&current);
-            strbuf_init(&current, 32);
+            chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuffer_steal(&current);
+            strbuffer_init(&current, 32);
           }
         }
         chi_flag = 0;
-        strbuf_clear(&current);
-        strbuf_puts(&result, "HAN_ENG");
+        strbuffer_reset(&current);
+        strbuffer_add_str(&result, "HAN_ENG");
         eng_flag = 1;
       }
-      strbuf_put(&current, p, (bufsize_t)width);
+      strbuffer_add(&current, p, (size_t)width);
     } else if (morpheme_chart_is_chinese_codepoint(c)) {
       if (!chi_flag) {
         if (eng_flag && chart != NULL) {
           if (chart->eng_replacement_count < 128) {
-            chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuf_detach(&current);
-            strbuf_init(&current, 32);
+            chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuffer_steal(&current);
+            strbuffer_init(&current, 32);
           }
         }
         eng_flag = 0;
-        strbuf_clear(&current);
-        strbuf_puts(&result, "HAN_CHI");
+        strbuffer_reset(&current);
+        strbuffer_add_str(&result, "HAN_CHI");
         chi_flag = 1;
       }
-      strbuf_put(&current, p, (bufsize_t)width);
+      strbuffer_add(&current, p, (size_t)width);
     } else {
-      strbuf_put(&result, p, (bufsize_t)width);
+      strbuffer_add(&result, p, (size_t)width);
       if (eng_flag && chart != NULL) {
         if (chart->eng_replacement_count < 128) {
-          chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuf_detach(&current);
-          strbuf_init(&current, 32);
+          chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuffer_steal(&current);
+          strbuffer_init(&current, 32);
         }
       }
       if (chi_flag && chart != NULL) {
         if (chart->chi_replacement_count < 128) {
-          chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuf_detach(&current);
-          strbuf_init(&current, 32);
+          chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuffer_steal(&current);
+          strbuffer_init(&current, 32);
         }
       }
       eng_flag = 0;
       chi_flag = 0;
-      strbuf_clear(&current);
+      strbuffer_reset(&current);
     }
     p += width;
   }
   if (eng_flag && chart != NULL) {
     if (chart->eng_replacement_count < 128) {
-      chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuf_detach(&current);
-      strbuf_init(&current, 32);
+      chart->eng_replacements[chart->eng_replacement_count++] = (char *)strbuffer_steal(&current);
+      strbuffer_init(&current, 32);
     }
   }
   if (chi_flag && chart != NULL) {
     if (chart->chi_replacement_count < 128) {
-      chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuf_detach(&current);
-      strbuf_init(&current, 32);
+      chart->chi_replacements[chart->chi_replacement_count++] = (char *)strbuffer_steal(&current);
+      strbuffer_init(&current, 32);
     }
   }
-  strbuf_free(&current);
-  return (char *)strbuf_detach(&result);
+  strbuffer_release(&current);
+  return (char *)strbuffer_steal(&result);
 }
 
 static int HANNANUM_UNUSED
@@ -181,7 +181,7 @@ morpheme_chart_add(morpheme_chart_t *chart, int tag, int phoneme, int next_posit
   node->next_tag_type = next_tag_type;
   node->state = HANNANUM_MORPHEME_STATE_INCOMPLETE;
   node->connection_count = 0;
-  node->str = strbuf_strdup(str != NULL ? str : "");
+  node->str = hn_strdup(str != NULL ? str : "");
   if (node->str == NULL) {
     return -1;
   }
@@ -253,27 +253,27 @@ morpheme_chart_node_to_eojeol(const morpheme_chart_t *chart, const int *path, si
     node = &chart->nodes[index];
     if (strstr(node->str, "HAN_ENG") != NULL || strstr(node->str, "HAN_CHI") != NULL) {
       const char *p = node->str;
-      strbuf restored;
-      strbuf_init(&restored, (bufsize_t)strlen(node->str));
+      struct strbuffer restored;
+      strbuffer_init(&restored, (size_t)strlen(node->str));
       while (*p != '\0') {
         if (strncmp(p, "HAN_ENG", 7) == 0 && eng_index < chart->eng_replacement_count) {
-          strbuf_puts(&restored, chart->eng_replacements[eng_index++]);
+          strbuffer_add_str(&restored, chart->eng_replacements[eng_index++]);
           p += 7;
         } else if (strncmp(p, "HAN_CHI", 7) == 0 && chi_index < chart->chi_replacement_count) {
-          strbuf_puts(&restored, chart->chi_replacements[chi_index++]);
+          strbuffer_add_str(&restored, chart->chi_replacements[chi_index++]);
           p += 7;
         } else {
-          strbuf_putc(&restored, (unsigned char)*p++);
+          strbuffer_add_byte(&restored, (unsigned char)*p++);
         }
       }
-      out->morphemes[i] = (char *)strbuf_detach(&restored);
+      out->morphemes[i] = (char *)strbuffer_steal(&restored);
     } else {
-      out->morphemes[i] = strbuf_strdup(node->str);
+      out->morphemes[i] = hn_strdup(node->str);
     }
     if (node->tag >= 0 && (size_t)node->tag < tag_count) {
-      out->tags[i] = strbuf_strdup(tag_names[node->tag]);
+      out->tags[i] = hn_strdup(tag_names[node->tag]);
     } else {
-      out->tags[i] = strbuf_strdup("unk");
+      out->tags[i] = hn_strdup("unk");
     }
     if (out->morphemes[i] == NULL || out->tags[i] == NULL) {
       free_eojeol(out);
