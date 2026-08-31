@@ -1,7 +1,3 @@
-HanNLP is released under the GNU General Public License version 3 (GPL-3).
-The full text of the GPL-3 is provided by R and is available at
-<https://www.gnu.org/licenses/gpl-3.0.html>.
-
 HanNLP additionally bundles third-party code and data. Their respective
 copyright holders and licenses are recorded in inst/COPYRIGHTS and are
 summarized below.

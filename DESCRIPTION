@@ -6,7 +6,8 @@ Authors@R: c(
     person("Jonghyeon", "Park", role = c("aut", "cre"), email = "jng.hyn.park@gmail.com"),
     person("Heewon", "Jeon", role = "aut", email = "madjakarta@gmail.com"),
     person("Taekyung", "Kim", role = "ctb"),
-    person("Semantic Web Research Center, KAIST", role = "cph")
+    person("Semantic Web Research Center, KAIST", role = "cph",
+           comment = "Copyright details and third-party contributors are documented in inst/COPYRIGHTS.")
   )
 Maintainer: Jonghyeon Park <jng.hyn.park@gmail.com>
 Description: Provides Korean morphological analysis, part-of-speech (POS)
@@ -18,7 +19,7 @@ Description: Provides Korean morphological analysis, part-of-speech (POS)
     Bundled dictionary and statistical resources allow analysis to work
     out of the box, and optional dictionaries can be loaded at runtime from
     the 'Sejong' and 'NIADic' packages when they are installed and loaded.
-License: GPL-3 + file LICENSE
+License: GPL-3
 Copyright: See inst/COPYRIGHTS for bundled third-party code and data.
 URL: https://github.com/ShapeLayer/HanNLP
 BugReports: https://github.com/ShapeLayer/HanNLP/issues
