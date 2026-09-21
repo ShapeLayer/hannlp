@@ -122,17 +122,6 @@ hannanum_analyze(hannanum_t * h, const char *input)
     sets[i] = candidates_for(h, tokens.items[i]);
   }
   if (h->output_mode == HANNANUM_OUTPUT_MORPH || h->output_mode == HANNANUM_OUTPUT_MORPH_SIMPLE_09 || h->output_mode == HANNANUM_OUTPUT_MORPH_SIMPLE_22) {
-    result = (hannanum_result_t *) calloc(1, sizeof(hannanum_result_t));
-    if (result == NULL) {
-      for (i = 0; i < tokens.count; i++) {
-        free_candidate_list(&sets[i]);
-      }
-      free(sets);
-      free(selected);
-      str_vec_free(&tokens);
-      set_error(h, "out of memory");
-      return NULL;
-    }
     result->count = tokens.count;
     result->plain = (char **)calloc(result->count == 0 ? 1 : result->count, sizeof(char *));
     result->candidate_sets = (candidate_list_t *)calloc(result->count == 0 ? 1 : result->count, sizeof(candidate_list_t));
@@ -236,8 +225,13 @@ hannanum_result_destroy(hannanum_result_t * result)
     return;
   }
   for (i = 0; i < result->count; i++) {
-    free(result->plain[i]);
-    free_eojeol(&result->eojeols[i]);
+    if (result->plain != NULL) {
+      free(result->plain[i]);
+    }
+    /* Morphology results contain candidate_sets instead of eojeols. */
+    if (result->eojeols != NULL) {
+      free_eojeol(&result->eojeols[i]);
+    }
     if (result->candidate_sets != NULL) {
       free_candidate_list(&result->candidate_sets[i]);
     }

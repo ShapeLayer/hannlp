@@ -36,6 +36,18 @@ local({
   pos <- SimplePos09("한글 형태소 분석을 테스트합니다")
   stopifnot(is.list(pos), length(pos) > 0L)
 
+  # Multiple eojeols exercise destruction of candidate-only morphology results.
+  text <- intToUtf8(c(0xd55c, 0xae00, 0x20, 0xd615, 0xd0dc, 0xc18c))
+  morph <- MorphAnalyzer(text)
+  stopifnot(
+    is.list(morph),
+    identical(names(morph), strsplit(text, " ", fixed = TRUE)[[1L]]),
+    all(lengths(morph) > 0L),
+    all(vapply(morph, is.character, logical(1L))),
+    all(grepl("/", unlist(morph), fixed = TRUE)),
+    identical(MorphAnalyzer(text), morph)
+  )
+
   writeLines("한글 형태소 분석", tmp, useBytes = TRUE)
   stopifnot(length(concordance_file(tmp, "형태소", encoding = "UTF-8")) == 1L)
 
