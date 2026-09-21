@@ -197,7 +197,8 @@ hannlp_hannanum_analyze(SEXP sentence_sexp, SEXP data_dir_sexp, SEXP mode_sexp)
 
   result = hannanum_analyze(hannanum, sentence);
   if (result == NULL) {
-    const char *message = hannanum_error(hannanum);
+    char message[256];
+    snprintf(message, sizeof(message), "%s", hannanum_error(hannanum));
     hannanum_destroy(hannanum);
     error("HanNanum analysis failed: %s", message);
   }

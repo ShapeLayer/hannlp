@@ -3,5 +3,8 @@ OBJECTS = hannlp.o hannanum_r.o hangul_r.o hannanum.o
 
 all: $(SHLIB)
 
-hannanum.o: modules/hannanum/lib/hannanum/hannanum.c modules/hannanum/lib/hannanum/workflow.c
+hannanum.o: modules/hannanum/lib/hannanum/hannanum.c \
+  modules/hannanum/lib/hannanum/workflow.c \
+  modules/hannanum/lib/hannanum/comm.c \
+  modules/hannanum/lib/hannanum/simple_ma_result.c
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@

@@ -13,22 +13,24 @@ candidate_signature(const eojeol_t *eojeol, char **out)
     strbuffer_add_str(&signature, eojeol->tags[i]);
   }
   *out = (char *)strbuffer_steal(&signature);
-  return 1;
+  return *out != NULL;
 }
 
+/* Return -1 on allocation failure, 0 if absent, and 1 if present. */
 static int
 candidate_list_contains_signature(candidate_list_t *list, const eojeol_t *candidate)
 {
   char *candidate_sig;
   size_t i;
   if (!candidate_signature(candidate, &candidate_sig)) {
-    return 0;
+    return -1;
   }
   for (i = 0; i < list->count; i++) {
     char *sig;
     int equal;
     if (!candidate_signature(&list->items[i], &sig)) {
-      continue;
+      free(candidate_sig);
+      return -1;
     }
     equal = strcmp(candidate_sig, sig) == 0;
     free(sig);
@@ -48,6 +50,7 @@ simple_ma_process_list(candidate_list_t *list, int level)
   size_t i;
   memset(&result, 0, sizeof(result));
   for (i = 0; i < list->count; i++) {
+    int contains;
     eojeol_t candidate = clone_eojeol(&list->items[i]);
     if (candidate.length == 0) {
       continue;
@@ -57,7 +60,13 @@ simple_ma_process_list(candidate_list_t *list, int level)
       free_eojeol(&candidate);
       return 0;
     }
-    if (!candidate_list_contains_signature(&result, &candidate)) {
+    contains = candidate_list_contains_signature(&result, &candidate);
+    if (contains < 0) {
+      free_candidate_list(&result);
+      free_eojeol(&candidate);
+      return 0;
+    }
+    if (!contains) {
       if (!candidate_list_add(&result, candidate)) {
         free_candidate_list(&result);
         free_eojeol(&candidate);

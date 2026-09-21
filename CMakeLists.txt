@@ -81,6 +81,9 @@ endif()
 
 if(HANNANUM_BUILD_TESTS)
   enable_testing()
+  add_executable(hannanum-memory-safety-test tests/memory_safety_test.c)
+  target_include_directories(hannanum-memory-safety-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/modules/hannanum/lib/hannanum)
+  add_test(NAME hannanum-memory-safety COMMAND hannanum-memory-safety-test)
   add_executable(hannanum-code-test
     tests/code_test.c
   )

@@ -251,7 +251,7 @@ hannanum_result_eojeol_count(const hannanum_result_t * result)
 size_t
 hannanum_result_morpheme_count(const hannanum_result_t * result, size_t eojeol_index)
 {
-  return result != NULL && eojeol_index < result->count ? result->eojeols[eojeol_index].length : 0;
+  return result != NULL && result->eojeols != NULL && eojeol_index < result->count ? result->eojeols[eojeol_index].length : 0;
 }
 
 const char     *
@@ -263,7 +263,7 @@ hannanum_result_plain(const hannanum_result_t * result, size_t eojeol_index)
 const char     *
 hannanum_result_morpheme(const hannanum_result_t * result, size_t eojeol_index, size_t morpheme_index)
 {
-  if (result == NULL || eojeol_index >= result->count || morpheme_index >= result->eojeols[eojeol_index].length) {
+  if (result == NULL || result->eojeols == NULL || eojeol_index >= result->count || morpheme_index >= result->eojeols[eojeol_index].length) {
     return NULL;
   }
   return result->eojeols[eojeol_index].morphemes[morpheme_index];
@@ -272,7 +272,7 @@ hannanum_result_morpheme(const hannanum_result_t * result, size_t eojeol_index, 
 const char     *
 hannanum_result_tag(const hannanum_result_t * result, size_t eojeol_index, size_t morpheme_index)
 {
-  if (result == NULL || eojeol_index >= result->count || morpheme_index >= result->eojeols[eojeol_index].length) {
+  if (result == NULL || result->eojeols == NULL || eojeol_index >= result->count || morpheme_index >= result->eojeols[eojeol_index].length) {
     return NULL;
   }
   return result->eojeols[eojeol_index].tags[morpheme_index];

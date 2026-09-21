@@ -49,8 +49,8 @@ static int
 candidate_list_add(candidate_list_t * list, eojeol_t eojeol)
 {
   eojeol_t       *next;
+  /* Ownership transfers to the list only on success. */
   if (!postprocess_eojeol(&eojeol)) {
-    free_eojeol(&eojeol);
     return 0;
   }
   if (list->count == list->capacity) {
