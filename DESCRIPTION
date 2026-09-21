@@ -25,6 +25,6 @@ URL: https://github.com/ShapeLayer/HanNLP
 BugReports: https://github.com/ShapeLayer/HanNLP/issues
 Encoding: UTF-8
 Depends: R (>= 4.0.0)
-Imports: tools, utils
+Imports: utils
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)

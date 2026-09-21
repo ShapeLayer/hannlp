@@ -19,3 +19,9 @@ buildDictionary(
 }
 \value{invisible data.frame of the resulting user dictionary}
 \description{Build the writable HanNLP user dictionary from user-supplied entries and optional external sources. The Sejong dictionary is read from the installed Sejong package or the path specified by \code{HANNLP_SEJONG_HANDIC}. The \code{woorimalsam} and \code{insighter} dictionaries require the optional \code{NIADic} package to be installed and loaded (\code{library(NIADic)}) in the current session; HanNLP does not bundle NIADic data.}
+\details{
+Before writing dictionary files, explicitly set the environment variable
+\code{HANNLP_USER_DATA_DIR} to the desired directory. There is no default
+writable directory. Backups are stored in its \file{backup} subdirectory.
+For temporary use, choose a directory under \code{tempdir()}.
+}

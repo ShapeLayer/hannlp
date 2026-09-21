@@ -1,6 +1,3 @@
-.hannlp_state <- new.env(parent = emptyenv())
-.hannlp_state$user_data_dir <- NULL
-
 .hannlp_package_data_dir <- function() {
   package_data <- system.file("modules", "hannanum", "inst", "hannanum-data", package = "HanNLP")
   if (nzchar(package_data) && dir.exists(package_data)) {
@@ -22,14 +19,17 @@
   if (nzchar(override)) {
     return(override)
   }
-  file.path(tools::R_user_dir("HanNLP", "data"), "hannanum-data")
+  ""
 }
 
 .hannlp_user_data_dir <- function(create = TRUE) {
-  if (!is.null(.hannlp_state$user_data_dir)) {
-    return(.hannlp_state$user_data_dir)
-  }
   target <- .hannlp_user_root()
+  if (!nzchar(target)) {
+    if (isTRUE(create)) {
+      stop("Set HANNLP_USER_DATA_DIR explicitly before writing dictionary files.", call. = FALSE)
+    }
+    return(.hannlp_package_data_dir())
+  }
   if (!dir.exists(target) && isTRUE(create)) {
     source <- .hannlp_package_data_dir()
     if (!dir.exists(target)) {
@@ -41,16 +41,21 @@
       stop("failed to initialize HanNLP user dictionary data.", call. = FALSE)
     }
   }
-  .hannlp_state$user_data_dir <- target
   target
 }
 
 .hannlp_user_dic_path <- function(create = TRUE) {
-  file.path(.hannlp_user_data_dir(create = create), "kE", "dic_user.txt")
+  root <- .hannlp_user_data_dir(create = create)
+  if (!isTRUE(create) && !dir.exists(root)) root <- .hannlp_package_data_dir()
+  file.path(root, "kE", "dic_user.txt")
 }
 
 .hannlp_backup_dic_path <- function() {
-  file.path(dirname(.hannlp_user_data_dir(create = TRUE)), "backup", "dic_user.txt")
+  root <- .hannlp_user_root()
+  if (!nzchar(root)) {
+    stop("Set HANNLP_USER_DATA_DIR explicitly before accessing a backup.", call. = FALSE)
+  }
+  file.path(root, "backup", "dic_user.txt")
 }
 
 .hannlp_read_dic <- function(path) {
@@ -241,6 +246,8 @@ reloadUserDic <- function(whichDics) {
 #' Backup current user dictionary
 #'
 #' @param ask ask to confirm backup
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 backupUsrDic <- function(ask = TRUE) {
   response <- "Y"
@@ -264,6 +271,8 @@ backupUsrDic <- function(ask = TRUE) {
 #' Restore backed up user dictionary
 #'
 #' @param ask ask to confirm restore
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 restoreUsrDic <- function(ask = TRUE) {
   backup <- .hannlp_backup_dic_path()
@@ -291,6 +300,8 @@ restoreUsrDic <- function(ask = TRUE) {
 #' @param append append to existing dictionary or replace it
 #' @param verbose retained for KoNLP API compatibility
 #' @param ask ask to backup current dictionary
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 mergeUserDic <- function(newUserDic, append = TRUE, verbose = FALSE, ask = FALSE) {
   if (isTRUE(ask)) {
@@ -319,6 +330,8 @@ mergeUserDic <- function(newUserDic, append = TRUE, verbose = FALSE, ask = FALSE
 #' @param user_dic user dictionary data.frame with term and KAIST tag columns
 #' @param replace_usr_dic replace existing user dictionary instead of appending
 #' @param verbose print detail progress
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 buildDictionary <- function(ext_dic = "", category_dic_nms = "", user_dic = data.frame(), replace_usr_dic = FALSE, verbose = FALSE) {
   external_dic <- if (length(ext_dic) > 0L && any(nzchar(ext_dic))) {
@@ -340,7 +353,7 @@ buildDictionary <- function(ext_dic = "", category_dic_nms = "", user_dic = data
     out <- data.frame(term = character(), tag = character(), stringsAsFactors = FALSE)
     .hannlp_write_user_dic(out)
   } else {
-    out <- .hannlp_read_dic(.hannlp_user_dic_path(create = TRUE))
+    out <- .hannlp_read_dic(.hannlp_user_dic_path(create = FALSE))
   }
   message(sprintf("%s words dictionary was built.", nrow(out)))
   reloadAllDic()
@@ -355,7 +368,7 @@ buildDictionary <- function(ext_dic = "", category_dic_nms = "", user_dic = data
 statDic <- function(which = "current", n = 6) {
   path <- switch(
     which,
-    current = .hannlp_user_dic_path(create = TRUE),
+    current = .hannlp_user_dic_path(create = FALSE),
     backup = .hannlp_backup_dic_path(),
     stop("No dictionary to summary!", call. = FALSE)
   )
@@ -379,7 +392,7 @@ get_dictionary <- function(dic_name) {
   }
   path <- switch(
     dic_name,
-    user_dic = .hannlp_user_dic_path(create = TRUE),
+    user_dic = .hannlp_user_dic_path(create = FALSE),
     system_dic = file.path(.hannlp_hannanum_data_dir(), "kE", "dic_system.txt"),
     analyzed_dic = file.path(.hannlp_hannanum_data_dir(), "kE", "dic_analyzed.txt"),
     sejong = return(.hannlp_read_sejong_dic()),
@@ -393,6 +406,8 @@ get_dictionary <- function(dic_name) {
 #' Use bundled Sejong-style dictionary
 #'
 #' @param backup backup current dictionary before switching
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 useSejongDic <- function(backup = TRUE) {
   if (isTRUE(backup)) backupUsrDic(ask = FALSE)
@@ -402,6 +417,8 @@ useSejongDic <- function(backup = TRUE) {
 #' Use system default dictionary
 #'
 #' @param backup backup current dictionary before switching
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 useSystemDic <- function(backup = TRUE) {
   if (isTRUE(backup)) backupUsrDic(ask = FALSE)
@@ -422,6 +439,8 @@ useSystemDic <- function(backup = TRUE) {
 #' @param which_dic NIADic dictionaries to load: `woorimalsam`, `insighter`, or both
 #' @param category_dic_nms retained for KoNLP API compatibility
 #' @param backup backup current dictionary before switching
+#' @details Dictionary writes require an explicit HANNLP_USER_DATA_DIR.
+#'   There is no default writable path; backups stay in its backup subdirectory.
 #' @export
 useNIADic <- function(which_dic = c("woorimalsam", "insighter"), category_dic_nms = "all", backup = TRUE) {
   if (isTRUE(backup)) backupUsrDic(ask = FALSE)

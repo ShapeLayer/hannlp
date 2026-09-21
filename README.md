@@ -26,3 +26,21 @@ R CMD INSTALL path_of_HanNLP
 # git clone https://github.com/shapelayer/HanNLP.git
 # R CMD INSTALL HanNLP
 ```
+
+## User dictionary storage
+
+Analysis and dictionary lookup use the bundled data without creating files. Before modifying or backing up a dictionary, explicitly set `HANNLP_USER_DATA_DIR` to a destination directory; no writable path is selected by default. Backups live in the `backup` subdirectory of that destination. For temporary use:
+
+```r
+local({
+  old <- Sys.getenv("HANNLP_USER_DATA_DIR", unset = NA_character_)
+  path <- tempfile("hannlp-dictionary-")
+  on.exit({
+    if (is.na(old)) Sys.unsetenv("HANNLP_USER_DATA_DIR") else
+      Sys.setenv(HANNLP_USER_DATA_DIR = old)
+    unlink(path, recursive = TRUE)
+  })
+  Sys.setenv(HANNLP_USER_DATA_DIR = path)
+  mergeUserDic(data.frame(term = "HanNLP", tag = "ncn"), append = FALSE)
+})
+```

@@ -4,9 +4,19 @@
 This section is completed by GitHub Actions for check, release, and manual runs.
 <!-- GHA_TESTS_END -->
 
-## New submission
 
-This is the first CRAN submission of HanNLP.
+## Resubmission
+
+This resubmission addresses the review comments:
+
+* Removed the unnecessary `\dontrun{}` wrapper from the morphology example.
+* Removed the default user-home dictionary path. Dictionary writes now require
+  an explicitly supplied `HANNLP_USER_DATA_DIR`; analysis and current-dictionary
+  reads do not create files.
+* Backups stay inside the explicitly selected directory. Examples and tests
+  use temporary directories and clean up their files.
+* Removed cached destination paths so changes to the explicit directory take
+  effect immediately.
 
 HanNLP ports the KoNLP/HanNanum morphological analyzer backend to native C and
 therefore does not require Java or rJava at runtime.
