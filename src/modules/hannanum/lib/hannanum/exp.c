@@ -991,11 +991,11 @@ exp_rule_np_generate(const codepoint_vec_t *str, exp_change_t *changes, size_t m
   unsigned int jong_n;
   unsigned int jong_l;
   size_t width;
-  memset(changes, 0, max_count * sizeof(changes[0]));
   memset(&back, 0, sizeof(back));
   if (str == NULL || changes == NULL || !utf8_decode_one((const unsigned char *)"ᆫ", &jong_n, &width) || !utf8_decode_one((const unsigned char *)"ᆯ", &jong_l, &width)) {
     return 0;
   }
+  memset(changes, 0, max_count * sizeof(changes[0]));
   if (exp_vec_starts_with_utf8(str, "내가")) {
     if (exp_vec_slice(str, 2, str->count, &back)) {
       exp_add_change_from_utf8_parts("나", &back, EXP_TAG_TYPE_NBNP, EXP_TAG_TYPE_JOSA, changes, &count, max_count);
