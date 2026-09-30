@@ -379,7 +379,6 @@ morpheme_chart_scan_one_trie(morpheme_chart_t *chart, segment_position_t *sp, se
 {
   trie_node_t *node;
   int to;
-  int segment_path[HANNANUM_MAX_SEGMENT];
   int segment_len = 0;
   int added = 0;
   codepoint_vec_t prefix;
@@ -406,7 +405,7 @@ morpheme_chart_scan_one_trie(morpheme_chart_t *chart, segment_position_t *sp, se
     if (!codepoint_vec_push(&prefix, to_pos->key)) {
       break;
     }
-    segment_path[segment_len++] = to;
+    segment_len++;
     if (node->info != NULL) {
       char *text = hannanum_code_from_triple(&prefix);
       if (text == NULL) {
@@ -442,7 +441,6 @@ morpheme_chart_scan_one_trie(morpheme_chart_t *chart, segment_position_t *sp, se
     }
     free(matches[match_count].text);
   }
-  (void)segment_path;
   codepoint_vec_free(&prefix);
   return added;
 }
