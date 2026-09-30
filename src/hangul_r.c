@@ -527,6 +527,9 @@ hannlp_hangul_is(SEXP input_sexp, SEXP kind_sexp)
   PROTECT(out = allocVector(LGLSXP, XLENGTH(input_sexp)));
   for (i = 0; i < XLENGTH(input_sexp); i++) {
     SEXP elt = STRING_ELT(input_sexp, i);
+    if ((i & 0xffff) == 0xffff) {
+      R_CheckUserInterrupt();
+    }
     LOGICAL(out)[i] = elt == NA_STRING ? NA_LOGICAL : string_matches_kind(translateCharUTF8(elt), kind);
   }
   UNPROTECT(1);
