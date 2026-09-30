@@ -148,12 +148,13 @@ result_to_candidate_list(const hannanum_result_t *result)
         const char *morpheme = hannanum_result_candidate_morpheme(result, i, j, k);
         const char *tag = hannanum_result_candidate_tag(result, i, j, k);
         int written;
-        if (k != 0) {
+        if (k != 0 && (size_t) (cursor - buffer) + 1 < len) {
           *cursor++ = '+';
         }
         written = snprintf(cursor, len - (size_t) (cursor - buffer), "%s/%s", morpheme == NULL ? "" : morpheme, tag == NULL ? "" : tag);
         if (written > 0) {
-          cursor += written;
+          size_t remaining = len - (size_t) (cursor - buffer);
+          cursor += (size_t) written < remaining ? (size_t) written : remaining - 1;
         }
       }
       *cursor = '\0';
