@@ -667,6 +667,10 @@ morpheme_chart_process_r_state(hannanum_t *h, morpheme_chart_t *chart, segment_p
       continue;
     }
     if (chart->nodes[mp].state == HANNANUM_MORPHEME_STATE_INCOMPLETE) {
+      /* Marked before recursing: a zero-width node (e.g. an inserted "이")
+         points back at its own position, and re-entering it must not recurse
+         forever. Without such a cycle the provisional state is never read. */
+      chart->nodes[mp].state = HANNANUM_MORPHEME_STATE_FAIL;
       y = recursor(h, chart, sp, mp, chart->nodes[mp].next_tag_type, userdata);
       x += y;
       chart->nodes[mp].state = y != 0 ? HANNANUM_MORPHEME_STATE_SUCCESS : HANNANUM_MORPHEME_STATE_FAIL;
