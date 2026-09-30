@@ -34,6 +34,10 @@ typedef struct trie_node {
   trie_info_t *info;
 } trie_node_t;
 
+/* Segment positions hold at most 1024 code points per word, so longer
+   dictionary words can never match; rejecting them also bounds trie depth. */
+#define HANNANUM_MAX_TRIE_WORD 1024u
+
 typedef struct hannanum_trie {
   trie_node_t root;
   trie_node_t *search_nodes[256];

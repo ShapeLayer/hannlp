@@ -17,20 +17,34 @@ trie_info_free(trie_info_t *info)
   }
 }
 
+/* Frees every descendant of node without recursion: dictionary words can be
+   tens of thousands of code points long, and a recursive walk would need one
+   stack frame per code point. Each child subtree is spliced into the sibling
+   chain being walked, so the traversal needs no auxiliary storage. */
 static void
 trie_node_free_children(trie_node_t *node)
 {
-  trie_node_t *child;
+  trie_node_t *cur;
   if (node == NULL) {
     return;
   }
-  child = node->child;
-  while (child != NULL) {
-    trie_node_t *next = child->sibling;
-    trie_node_free_children(child);
-    trie_info_free(child->info);
-    free(child);
-    child = next;
+  cur = node->child;
+  node->child = NULL;
+  while (cur != NULL) {
+    trie_node_t *next;
+    if (cur->child != NULL) {
+      trie_node_t *tail = cur->child;
+      while (tail->sibling != NULL) {
+        tail = tail->sibling;
+      }
+      tail->sibling = cur->sibling;
+      cur->sibling = cur->child;
+      cur->child = NULL;
+    }
+    next = cur->sibling;
+    trie_info_free(cur->info);
+    free(cur);
+    cur = next;
   }
 }
 
@@ -124,7 +138,7 @@ trie_store_codepoints(hannanum_trie_t *trie, const unsigned int *word, size_t co
   trie_node_t *node;
   trie_info_t *info;
   size_t i;
-  if (trie == NULL || word == NULL || count == 0) {
+  if (trie == NULL || word == NULL || count == 0 || count > HANNANUM_MAX_TRIE_WORD) {
     return 0;
   }
   node = &trie->root;
