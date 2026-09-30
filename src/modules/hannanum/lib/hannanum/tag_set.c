@@ -253,6 +253,8 @@ load_tag_set(hannanum_t *h)
       h->tag_groups[h->tag_group_count].ids = ids;
       h->tag_groups[h->tag_group_count].count = count;
       if (h->tag_groups[h->tag_group_count].name == NULL) {
+        free(ids);
+        h->tag_groups[h->tag_group_count].ids = NULL;
         fclose(fp);
         return 0;
       }
