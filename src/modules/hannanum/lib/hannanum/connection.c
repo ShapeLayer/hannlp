@@ -18,13 +18,10 @@ parse_connection_side(hannanum_t *h, const char *expr, int **items, size_t *coun
   for (token = strtok_r(copy, ",()", &save); token != NULL; token = strtok_r(NULL, ",()", &save)) {
     char *minus;
     char *base = token;
-    int *before = NULL;
-    size_t before_count;
     minus = strchr(token, '-');
     if (minus != NULL) {
       *minus = '\0';
     }
-    before_count = *count;
     if (!append_tag_or_group(h, base, items, count, &capacity)) {
       free(copy);
       return 0;
@@ -32,12 +29,6 @@ parse_connection_side(hannanum_t *h, const char *expr, int **items, size_t *coun
     if (minus != NULL) {
       char *remove_token;
       char *remove_save = NULL;
-      before = (int *)calloc(*count - before_count, sizeof(int));
-      if (before == NULL && *count > before_count) {
-        free(copy);
-        return 0;
-      }
-      memcpy(before, *items + before_count, (*count - before_count) * sizeof(int));
       for (remove_token = strtok_r(minus + 1, "-", &remove_save); remove_token != NULL; remove_token = strtok_r(NULL, "-", &remove_save)) {
         tag_group_t *group = tag_group_find(h, remove_token);
         if (group != NULL) {
@@ -49,7 +40,6 @@ parse_connection_side(hannanum_t *h, const char *expr, int **items, size_t *coun
           int_list_remove(*items, count, tag_id(h, remove_token));
         }
       }
-      free(before);
     }
   }
   free(copy);
