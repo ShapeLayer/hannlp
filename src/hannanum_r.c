@@ -162,6 +162,18 @@ result_to_candidate_list(const hannanum_result_t *result)
   return out;
 }
 
+static const char *
+string_arg(SEXP value, const char *name)
+{
+  if (!isString(value) || XLENGTH(value) != 1) {
+    error("%s must be a character scalar", name);
+  }
+  if (STRING_ELT(value, 0) == NA_STRING) {
+    error("%s must not be NA", name);
+  }
+  return translateCharUTF8(STRING_ELT(value, 0));
+}
+
 static void
 require_valid_utf8(const char *s, const char *name)
 {

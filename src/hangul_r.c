@@ -520,10 +520,14 @@ hannlp_hangul_is(SEXP input_sexp, SEXP kind_sexp)
   if (!isString(input_sexp) || !isString(kind_sexp) || XLENGTH(kind_sexp) != 1) {
     error("invalid Hangul predicate input");
   }
+  if (STRING_ELT(kind_sexp, 0) == NA_STRING) {
+    error("Hangul predicate kind must not be NA");
+  }
   kind = translateCharUTF8(STRING_ELT(kind_sexp, 0));
   PROTECT(out = allocVector(LGLSXP, XLENGTH(input_sexp)));
   for (i = 0; i < XLENGTH(input_sexp); i++) {
-    LOGICAL(out)[i] = string_matches_kind(translateCharUTF8(STRING_ELT(input_sexp, i)), kind);
+    SEXP elt = STRING_ELT(input_sexp, i);
+    LOGICAL(out)[i] = elt == NA_STRING ? NA_LOGICAL : string_matches_kind(translateCharUTF8(elt), kind);
   }
   UNPROTECT(1);
   return out;
@@ -537,6 +541,9 @@ hannlp_hangul_to_jamos(SEXP input_sexp)
   SEXP out;
   if (!isString(input_sexp) || XLENGTH(input_sexp) != 1) {
     error("input must be a character scalar");
+  }
+  if (STRING_ELT(input_sexp, 0) == NA_STRING) {
+    error("input must not be NA");
   }
   p = (const unsigned char *)translateCharUTF8(STRING_ELT(input_sexp, 0));
   while (*p != '\0') {
@@ -575,6 +582,9 @@ hannlp_hangul_to_keystrokes(SEXP input_sexp, SEXP fullwidth_sexp)
   SEXP out;
   if (!isString(input_sexp) || XLENGTH(input_sexp) != 1) {
     error("input must be a character scalar");
+  }
+  if (STRING_ELT(input_sexp, 0) == NA_STRING) {
+    error("input must not be NA");
   }
   if (fullwidth == NA_LOGICAL) {
     fullwidth = 1;
@@ -628,6 +638,9 @@ hannlp_hangul_automata(SEXP input_sexp, SEXP keystroke_sexp, SEXP force_sexp)
 
   if (!isString(input_sexp) || XLENGTH(input_sexp) != 1) {
     error("input must be a character scalar");
+  }
+  if (STRING_ELT(input_sexp, 0) == NA_STRING) {
+    error("input must not be NA");
   }
   if (keystroke == NA_LOGICAL) {
     keystroke = 0;
