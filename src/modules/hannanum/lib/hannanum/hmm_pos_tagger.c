@@ -182,50 +182,144 @@ wp_transition(hannanum_t * h, const char *from, const char *to)
   return value;
 }
 
+/* Phrase tags are two characters drawn from a small alphabet, so the
+   distinct phrases of a sentence and their transition scores are cached. */
+#define HMM_MAX_PHRASES 256u
+
+typedef struct {
+  char phrase[HMM_MAX_PHRASES][3];
+  size_t count;
+  double *transition;
+  unsigned char *has_transition;
+} hmm_phrase_table_t;
+
+static size_t
+hmm_phrase_id(hmm_phrase_table_t *table, const char *phrase)
+{
+  size_t i;
+  for (i = 0; i < table->count; i++) {
+    if (table->phrase[i][0] == phrase[0] && table->phrase[i][1] == phrase[1]) {
+      return i;
+    }
+  }
+  if (table->count >= HMM_MAX_PHRASES) {
+    return HMM_MAX_PHRASES;
+  }
+  memcpy(table->phrase[table->count], phrase, 3);
+  return table->count++;
+}
+
+static double
+hmm_phrase_transition(hannanum_t *h, hmm_phrase_table_t *table, size_t from, size_t to)
+{
+  size_t cell = from * HMM_MAX_PHRASES + to;
+  if (!table->has_transition[cell]) {
+    table->transition[cell] = wp_transition(h, table->phrase[from], table->phrase[to]);
+    table->has_transition[cell] = 1;
+  }
+  return table->transition[cell];
+}
+
+static void
+free_hmm_nodes(hmm_node_t **nodes, size_t count)
+{
+  size_t i;
+  if (nodes == NULL) {
+    return;
+  }
+  for (i = 0; i < count; i++) {
+    free(nodes[i]);
+  }
+  free(nodes);
+}
+
 static int
 select_best(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * selected)
 {
   hmm_node_t    **nodes;
   size_t         *node_counts;
+  hmm_phrase_table_t *phrases;
+  double         *group_score;
+  size_t         *group_back;
   size_t          i;
-  nodes = (hmm_node_t * *) calloc(count + 1, sizeof(hmm_node_t *));
-  node_counts = (size_t *) calloc(count + 1, sizeof(size_t));
-  if (nodes == NULL || node_counts == NULL) {
-    free(nodes);
-    free(node_counts);
-    return 0;
+  if (count == 0) {
+    return 1;
+  }
+  /* Every column needs at least one node; back-tracking reads nodes[pos][best]. */
+  for (i = 0; i < count; i++) {
+    if (sets[i].count == 0) {
+      return 0;
+    }
+  }
+  nodes = (hmm_node_t * *) calloc(count, sizeof(hmm_node_t *));
+  node_counts = (size_t *) calloc(count, sizeof(size_t));
+  phrases = (hmm_phrase_table_t *) calloc(1, sizeof(hmm_phrase_table_t));
+  group_score = (double *) calloc(HMM_MAX_PHRASES, sizeof(double));
+  group_back = (size_t *) calloc(HMM_MAX_PHRASES, sizeof(size_t));
+  if (phrases != NULL) {
+    phrases->transition = (double *) calloc(HMM_MAX_PHRASES * HMM_MAX_PHRASES, sizeof(double));
+    phrases->has_transition = (unsigned char *) calloc(HMM_MAX_PHRASES * HMM_MAX_PHRASES, 1);
+  }
+  if (nodes == NULL || node_counts == NULL || phrases == NULL || phrases->transition == NULL || phrases->has_transition == NULL || group_score == NULL || group_back == NULL) {
+    goto fail;
   }
   for (i = 0; i < count; i++) {
     size_t          j;
+    if (h->interrupt != NULL && h->interrupt(h->interrupt_userdata)) {
+      goto fail;
+    }
     node_counts[i] = sets[i].count;
     nodes[i] = (hmm_node_t *) calloc(node_counts[i], sizeof(hmm_node_t));
     if (nodes[i] == NULL) {
-      free(nodes);
-      free(node_counts);
-      return 0;
+      goto fail;
     }
     for (j = 0; j < node_counts[i]; j++) {
       nodes[i][j].eojeol = &sets[i].items[j];
       phrase_tag(&sets[i].items[j], nodes[i][j].phrase);
+      nodes[i][j].phrase_id = hmm_phrase_id(phrases, nodes[i][j].phrase);
+      if (nodes[i][j].phrase_id >= HMM_MAX_PHRASES) {
+        goto fail;
+      }
       nodes[i][j].wt = compute_wt(h, &sets[i].items[j]);
       nodes[i][j].score = i == 0 ? nodes[i][j].wt : -DBL_MAX;
     }
   }
   for (i = 0; i + 1 < count; i++) {
     size_t          j;
+    size_t          k;
+    size_t          p;
+    if (h->interrupt != NULL && h->interrupt(h->interrupt_userdata)) {
+      goto fail;
+    }
+    /* The transition score depends only on the phrase pair, so the best
+       predecessor within each phrase group is the earliest top scorer. */
+    for (p = 0; p < phrases->count; p++) {
+      group_back[p] = SIZE_MAX;
+    }
     for (j = 0; j < node_counts[i]; j++) {
-      size_t          k;
-      for (k = 0; k < node_counts[i + 1]; k++) {
-        double          score = nodes[i][j].score + wp_transition(h, nodes[i][j].phrase, nodes[i + 1][k].phrase) + nodes[i + 1][k].wt;
-        if (!nodes[i + 1][k].has_back || score > nodes[i + 1][k].score) {
-          nodes[i + 1][k].score = score;
-          nodes[i + 1][k].back = j;
-          nodes[i + 1][k].has_back = 1;
+      p = nodes[i][j].phrase_id;
+      if (group_back[p] == SIZE_MAX || nodes[i][j].score > group_score[p]) {
+        group_score[p] = nodes[i][j].score;
+        group_back[p] = j;
+      }
+    }
+    for (k = 0; k < node_counts[i + 1]; k++) {
+      hmm_node_t *next = &nodes[i + 1][k];
+      for (p = 0; p < phrases->count; p++) {
+        double          score;
+        if (group_back[p] == SIZE_MAX) {
+          continue;
+        }
+        score = group_score[p] + hmm_phrase_transition(h, phrases, p, next->phrase_id) + next->wt;
+        if (!next->has_back || score > next->score || (score == next->score && group_back[p] < next->back)) {
+          next->score = score;
+          next->back = group_back[p];
+          next->has_back = 1;
         }
       }
     }
   }
-  if (count > 0) {
+  {
     size_t          best = 0;
     for (i = count; i > 0; i--) {
       size_t          pos = i - 1;
@@ -233,12 +327,25 @@ select_best(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * sele
       best = nodes[pos][best].back;
     }
   }
-  for (i = 0; i < count; i++) {
-    free(nodes[i]);
-  }
-  free(nodes);
+  free_hmm_nodes(nodes, count);
   free(node_counts);
+  free(phrases->transition);
+  free(phrases->has_transition);
+  free(phrases);
+  free(group_score);
+  free(group_back);
   return 1;
+fail:
+  free_hmm_nodes(nodes, count);
+  free(node_counts);
+  if (phrases != NULL) {
+    free(phrases->transition);
+    free(phrases->has_transition);
+  }
+  free(phrases);
+  free(group_score);
+  free(group_back);
+  return 0;
 }
 
 static int
