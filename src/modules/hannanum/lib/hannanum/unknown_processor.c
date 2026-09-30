@@ -51,11 +51,15 @@ static candidate_list_t candidates_for(hannanum_t * h, const char *plain){
     eojeol_t        e;
     e = make_single(plain, "ncn");
     if (e.length > 0) {
-      candidate_list_add(&list, e);
+      if (!candidate_list_add(&list, e)) {
+        free_eojeol(&e);
+      }
     }
     e = make_single(plain, "nqq");
     if (e.length > 0) {
-      candidate_list_add(&list, e);
+      if (!candidate_list_add(&list, e)) {
+        free_eojeol(&e);
+      }
     }
   }
   return list;

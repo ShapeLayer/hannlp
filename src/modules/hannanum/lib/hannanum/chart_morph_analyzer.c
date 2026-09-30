@@ -847,7 +847,9 @@ append_email_head_candidate(const char *plain, candidate_list_t * list)
   free(local);
   free(domain);
   if (e.length > 0) {
-    candidate_list_add(list, e);
+    if (!candidate_list_add(list, e)) {
+      free_eojeol(&e);
+    }
     return 1;
   }
   return 0;
@@ -1179,7 +1181,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     e = make_pair(base, "ncn", ":", "sp");
     free(base);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1189,7 +1193,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
   if (strcmp(plain, "...") == 0) {
     e = make_single(plain, "se");
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1198,7 +1204,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     const char     *tags[3] = { "sy", "se", "sy" };
     e = make_parts(3, surfaces, tags);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1207,7 +1215,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     const char     *tags[2] = { "sf", "sl" };
     e = make_parts(2, surfaces, tags);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1216,21 +1226,27 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     const char     *tags[2] = { "sf", "sf" };
     e = make_parts(2, surfaces, tags);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
   if (strcmp(plain, "(") == 0) {
     e = make_single(plain, "sl");
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
   if (strcmp(plain, ")") == 0) {
     e = make_single(plain, "sr");
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1253,7 +1269,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     e = make_parts(3, surfaces, tags);
     free(inner);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1270,7 +1288,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     e = make_parts(3, surfaces, tags);
     free(inner);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1282,7 +1302,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     e = make_pair(number, "nnc", "%", "su");
     free(number);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1295,7 +1317,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
       e = make_pair(number, "nnc", ".", "sf");
       free(number);
       if (e.length > 0) {
-        candidate_list_add(list, e);
+        if (!candidate_list_add(list, e)) {
+          free_eojeol(&e);
+        }
         return 1;
       }
     } else {
@@ -1305,7 +1329,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
   if (is_numeric_expression(plain) || is_simple_signed_digits(plain)) {
     e = make_single(plain, "nnc");
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1321,7 +1347,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
       e = make_single(number, "nnc");
       free(number);
       if (e.length > 0) {
-        candidate_list_add(list, e);
+        if (!candidate_list_add(list, e)) {
+          free_eojeol(&e);
+        }
         return 1;
       }
     } else {
@@ -1334,7 +1362,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
   if (is_ascii_alpha_token(plain)) {
     e = make_single(plain, "f");
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
@@ -1351,7 +1381,9 @@ append_special_candidate(hannanum_t *h, const char *plain, candidate_list_t * li
     e = make_pair(number, "nnc", plain + i, "nbu");
     free(number);
     if (e.length > 0) {
-      candidate_list_add(list, e);
+      if (!candidate_list_add(list, e)) {
+        free_eojeol(&e);
+      }
       return 1;
     }
   }
