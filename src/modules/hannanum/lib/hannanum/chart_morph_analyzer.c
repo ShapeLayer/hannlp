@@ -424,12 +424,16 @@ append_segmented_candidates(hannanum_t * h, const char *plain, candidate_list_t 
   segment_stack_free(&stack);
 }
 
+/* Dictionary lines are read into a heap buffer; 64 KiB is too large for the
+   stack of embedded or secondary threads. */
+#define HANNANUM_DIC_LINE_SIZE 65536u
+
 static void
 load_analyzed_dic(hannanum_t * h)
 {
   char           *path = hn_path_join(h->data_dir, "kE/dic_analyzed.txt");
   FILE           *fp;
-  char            line[65536];
+  char           *line;
   if (path == NULL) {
     return;
   }
@@ -438,7 +442,12 @@ load_analyzed_dic(hannanum_t * h)
   if (fp == NULL) {
     return;
   }
-  while (fgets(line, sizeof(line), fp) != NULL) {
+  line = (char *)malloc(HANNANUM_DIC_LINE_SIZE);
+  if (line == NULL) {
+    fclose(fp);
+    return;
+  }
+  while (fgets(line, HANNANUM_DIC_LINE_SIZE, fp) != NULL) {
     char           *key;
     char           *analysis;
     char           *save = NULL;
@@ -473,6 +482,7 @@ load_analyzed_dic(hannanum_t * h)
       }
     }
   }
+  free(line);
   fclose(fp);
 }
 
@@ -481,7 +491,7 @@ load_surface_dic(hannanum_t * h, const char *relative, hannanum_trie_t *trie)
 {
   char           *path = hn_path_join(h->data_dir, relative);
   FILE           *fp;
-  char            line[65536];
+  char           *line;
   if (path == NULL) {
     return;
   }
@@ -490,7 +500,12 @@ load_surface_dic(hannanum_t * h, const char *relative, hannanum_trie_t *trie)
   if (fp == NULL) {
     return;
   }
-  while (fgets(line, sizeof(line), fp) != NULL) {
+  line = (char *)malloc(HANNANUM_DIC_LINE_SIZE);
+  if (line == NULL) {
+    fclose(fp);
+    return;
+  }
+  while (fgets(line, HANNANUM_DIC_LINE_SIZE, fp) != NULL) {
     char           *save = NULL;
     char           *surface;
     char           *tag;
@@ -524,6 +539,7 @@ load_surface_dic(hannanum_t * h, const char *relative, hannanum_trie_t *trie)
       }
     }
   }
+  free(line);
   fclose(fp);
 }
 
@@ -1486,28 +1502,40 @@ chart_expander(hannanum_t *h, morpheme_chart_t *chart, segment_position_t *sp, s
   return added;
 }
 
-static candidate_list_t HANNANUM_UNUSED
+static candidate_list_t
 chart_candidates_for(hannanum_t *h, const char *plain)
 {
   candidate_list_t list;
-  morpheme_chart_t chart;
-  segment_position_t sp;
+  /* The chart (~306 KiB) and segment positions (~2 MiB) are scratch objects
+     far too large for the stack of embedded or secondary threads, so they
+     live on the heap. */
+  morpheme_chart_t *chart;
+  segment_position_t *sp;
   simti_t *simti;
   int iwg = tag_id(h, "iwg");
   memset(&list, 0, sizeof(list));
-  if (iwg < 0 || !morpheme_chart_init(&chart)) {
+  if (iwg < 0) {
+    return list;
+  }
+  chart = (morpheme_chart_t *)calloc(1, sizeof(morpheme_chart_t));
+  sp = (segment_position_t *)calloc(1, sizeof(segment_position_t));
+  if (chart == NULL || sp == NULL || !morpheme_chart_init(chart)) {
+    free(sp);
+    free(chart);
     return list;
   }
   simti = simti_create();
   if (simti == NULL) {
+    free(sp);
+    free(chart);
     return list;
   }
-  if (morpheme_chart_init_word(&chart, &sp, simti, plain, iwg)) {
+  if (morpheme_chart_init_word(chart, sp, simti, plain, iwg)) {
     int pass;
-    chart_add_parenthesized_prefix(h, &chart, &sp);
+    chart_add_parenthesized_prefix(h, chart, sp);
     int result_count = 0;
     for (pass = 0; pass < 8; pass++) {
-      int current = morpheme_chart_analyze_with_callbacks(h, &chart, &sp, simti, 0, HANNANUM_TAG_TYPE_ALL, chart_expander, chart_tag_type_check, chart_connection_check, NULL);
+      int current = morpheme_chart_analyze_with_callbacks(h, chart, sp, simti, 0, HANNANUM_TAG_TYPE_ALL, chart_expander, chart_tag_type_check, chart_connection_check, NULL);
       if (current == result_count) {
         break;
       }
@@ -1515,9 +1543,9 @@ chart_candidates_for(hannanum_t *h, const char *plain)
     }
     if (result_count == 0) {
       int unk = tag_id(h, "unk");
-      if (morpheme_chart_analyze_unknown(h, &chart, &sp, unk) > 0) {
+      if (morpheme_chart_analyze_unknown(h, chart, sp, unk) > 0) {
         for (pass = 0; pass < 8; pass++) {
-          int current = morpheme_chart_analyze_with_callbacks(h, &chart, &sp, simti, 0, HANNANUM_TAG_TYPE_ALL, chart_expander, chart_tag_type_check, chart_connection_check, NULL);
+          int current = morpheme_chart_analyze_with_callbacks(h, chart, sp, simti, 0, HANNANUM_TAG_TYPE_ALL, chart_expander, chart_tag_type_check, chart_connection_check, NULL);
           if (current == result_count) {
             break;
           }
@@ -1525,9 +1553,11 @@ chart_candidates_for(hannanum_t *h, const char *plain)
         }
       }
     }
-    morpheme_chart_collect_results(&chart, 0, h->tag_names, h->tag_count, &list);
+    morpheme_chart_collect_results(chart, 0, h->tag_names, h->tag_count, &list);
   }
   simti_destroy(simti);
-  morpheme_chart_clear(&chart);
+  morpheme_chart_clear(chart);
+  free(sp);
+  free(chart);
   return list;
 }

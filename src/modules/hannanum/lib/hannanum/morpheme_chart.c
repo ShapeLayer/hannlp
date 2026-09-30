@@ -530,7 +530,9 @@ morpheme_chart_scan_system_user_tries(morpheme_chart_t *chart, segment_position_
   return added;
 }
 
-static int HANNANUM_UNUSED
+/* Kept out of line: its large local buffers must not become part of the
+   recursive morpheme_chart_analyze_with_callbacks frame. */
+static HANNANUM_NOINLINE int HANNANUM_UNUSED
 morpheme_chart_scan_dictionaries(hannanum_t *h, morpheme_chart_t *chart, segment_position_t *sp, int chart_index)
 {
   morpheme_chart_node_t *morph;
@@ -592,7 +594,9 @@ morpheme_chart_scan_dictionaries(hannanum_t *h, morpheme_chart_t *chart, segment
   return added;
 }
 
-static int HANNANUM_UNUSED
+/* Kept out of line: its large local buffers must not become part of the
+   recursive morpheme_chart_analyze_with_callbacks frame. */
+static HANNANUM_NOINLINE int HANNANUM_UNUSED
 morpheme_chart_expand_d_state(hannanum_t *h, morpheme_chart_t *chart, segment_position_t *sp, simti_t *simti, int chart_index, morpheme_chart_expander_t expander, void *userdata)
 {
   morpheme_chart_node_t *morph;

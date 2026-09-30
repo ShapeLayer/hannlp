@@ -23,6 +23,13 @@ along with JHanNanum.  If not, see <http://www.gnu.org/licenses/>   */
 
 #define HANNANUM_MAX_MORPHEME_CONNECTION 30
 #define HANNANUM_MAX_MORPHEME_CHART 2046
+#ifndef HANNANUM_NOINLINE
+#if defined(__GNUC__) || defined(__clang__)
+#define HANNANUM_NOINLINE __attribute__((noinline))
+#else
+#define HANNANUM_NOINLINE
+#endif
+#endif
 #define HANNANUM_MORPHEME_STATE_FAIL 0
 #define HANNANUM_MORPHEME_STATE_SUCCESS 1
 #define HANNANUM_MORPHEME_STATE_INCOMPLETE 2
