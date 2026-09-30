@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "hannanum.h"
+#include "utf8_decode.h"
 
 static hannanum_output_mode_t
 parse_mode(const char *mode)
@@ -159,6 +160,20 @@ result_to_candidate_list(const hannanum_result_t *result)
   setAttrib(out, R_NamesSymbol, names);
   UNPROTECT(2);
   return out;
+}
+
+static void
+require_valid_utf8(const char *s, const char *name)
+{
+  const unsigned char *p = (const unsigned char *) s;
+  while (*p != '\0') {
+    unsigned int cp;
+    size_t width;
+    if (!utf8_decode_one(p, &cp, &width)) {
+      error("%s is not valid UTF-8", name);
+    }
+    p += width;
+  }
 }
 
 SEXP

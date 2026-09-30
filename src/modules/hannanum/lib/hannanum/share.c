@@ -1,28 +1,4 @@
-static int
-utf8_decode_one(const unsigned char *s, unsigned int *codepoint, size_t *width)
-{
-  if (s[0] < 0x80) {
-    *codepoint = s[0];
-    *width = 1;
-    return 1;
-  }
-  if ((s[0] & 0xe0) == 0xc0 && (s[1] & 0xc0) == 0x80) {
-    *codepoint = ((unsigned int)(s[0] & 0x1f) << 6) | (unsigned int)(s[1] & 0x3f);
-    *width = 2;
-    return 1;
-  }
-  if ((s[0] & 0xf0) == 0xe0 && (s[1] & 0xc0) == 0x80 && (s[2] & 0xc0) == 0x80) {
-    *codepoint = ((unsigned int)(s[0] & 0x0f) << 12) | ((unsigned int)(s[1] & 0x3f) << 6) | (unsigned int)(s[2] & 0x3f);
-    *width = 3;
-    return 1;
-  }
-  if ((s[0] & 0xf8) == 0xf0 && (s[1] & 0xc0) == 0x80 && (s[2] & 0xc0) == 0x80 && (s[3] & 0xc0) == 0x80) {
-    *codepoint = ((unsigned int)(s[0] & 0x07) << 18) | ((unsigned int)(s[1] & 0x3f) << 12) | ((unsigned int)(s[2] & 0x3f) << 6) | (unsigned int)(s[3] & 0x3f);
-    *width = 4;
-    return 1;
-  }
-  return 0;
-}
+#include "utf8_decode.h"
 
 static int
 last_hangul_syllable(const char *s, unsigned int *syllable)

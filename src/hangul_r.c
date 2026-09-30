@@ -27,37 +27,17 @@ static const unsigned int jongseong[] = {
   0x3145, 0x3146, 0x3147, 0x3148, 0x314a, 0x314b, 0x314c, 0x314d, 0x314e
 };
 
-static int
-utf8_decode_one(const unsigned char *s, unsigned int *cp, size_t *width)
-{
-  if (s[0] < 0x80) {
-    *cp = s[0];
-    *width = 1;
-    return 1;
-  }
-  if ((s[0] & 0xe0) == 0xc0 && (s[1] & 0xc0) == 0x80) {
-    *cp = ((unsigned int)(s[0] & 0x1f) << 6) | (unsigned int)(s[1] & 0x3f);
-    *width = 2;
-    return 1;
-  }
-  if ((s[0] & 0xf0) == 0xe0 && (s[1] & 0xc0) == 0x80 && (s[2] & 0xc0) == 0x80) {
-    *cp = ((unsigned int)(s[0] & 0x0f) << 12) | ((unsigned int)(s[1] & 0x3f) << 6) | (unsigned int)(s[2] & 0x3f);
-    *width = 3;
-    return 1;
-  }
-  if ((s[0] & 0xf8) == 0xf0 && (s[1] & 0xc0) == 0x80 && (s[2] & 0xc0) == 0x80 && (s[3] & 0xc0) == 0x80) {
-    *cp = ((unsigned int)(s[0] & 0x07) << 18) | ((unsigned int)(s[1] & 0x3f) << 12) | ((unsigned int)(s[2] & 0x3f) << 6) | (unsigned int)(s[3] & 0x3f);
-    *width = 4;
-    return 1;
-  }
-  return 0;
-}
+#include "utf8_decode.h"
 
 static int
 buf_reserve(utf8_buffer_t *buf, size_t extra)
 {
-  size_t needed = buf->len + extra + 1;
+  size_t needed;
   char *next;
+  if (extra > (size_t)-1 - buf->len - 1) {
+    return 0;
+  }
+  needed = buf->len + extra + 1;
   if (needed <= buf->cap) {
     return 1;
   }
