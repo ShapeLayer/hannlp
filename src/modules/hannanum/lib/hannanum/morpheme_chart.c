@@ -145,6 +145,7 @@ morpheme_chart_init_word(morpheme_chart_t *chart, segment_position_t *sp, simti_
   }
   memset(&triple, 0, sizeof(triple));
   if (!hannanum_code_to_triple(replaced, &triple)) {
+    codepoint_vec_free(&triple);
     free(replaced);
     return 0;
   }
