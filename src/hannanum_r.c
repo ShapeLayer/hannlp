@@ -171,6 +171,35 @@ result_to_candidate_list(const hannanum_result_t *result)
   return out;
 }
 
+/* The analyzer and its result are owned by an external pointer while R
+   objects are built, so an R error (longjmp) during conversion leaves them
+   to the garbage collector instead of leaking them. */
+typedef struct {
+  hannanum_t *hannanum;
+  hannanum_result_t *result;
+} hannanum_call_t;
+
+static void
+hannanum_call_release(hannanum_call_t *call)
+{
+  if (call == NULL) {
+    return;
+  }
+  hannanum_result_destroy(call->result);
+  call->result = NULL;
+  hannanum_destroy(call->hannanum);
+  call->hannanum = NULL;
+}
+
+static void
+hannanum_call_finalize(SEXP ptr)
+{
+  hannanum_call_t *call = (hannanum_call_t *) R_ExternalPtrAddr(ptr);
+  hannanum_call_release(call);
+  free(call);
+  R_ClearExternalPtr(ptr);
+}
+
 static void
 check_interrupt_fn(void *unused)
 {
@@ -222,51 +251,53 @@ hannlp_hannanum_analyze(SEXP sentence_sexp, SEXP data_dir_sexp, SEXP mode_sexp)
   const char *data_dir;
   const char *mode;
   hannanum_options_t options;
-  hannanum_t *hannanum;
-  hannanum_result_t *result;
+  hannanum_call_t *call;
+  SEXP holder;
   SEXP out;
+  int interrupted = 0;
 
-  if (!isString(sentence_sexp) || XLENGTH(sentence_sexp) != 1) {
-    error("sentence must be a character scalar");
-  }
-  if (!isString(data_dir_sexp) || XLENGTH(data_dir_sexp) != 1) {
-    error("data_dir must be a character scalar");
-  }
-  if (!isString(mode_sexp) || XLENGTH(mode_sexp) != 1) {
-    error("mode must be a character scalar");
-  }
-
-  sentence = translateCharUTF8(STRING_ELT(sentence_sexp, 0));
-  data_dir = translateCharUTF8(STRING_ELT(data_dir_sexp, 0));
-  mode = translateCharUTF8(STRING_ELT(mode_sexp, 0));
+  sentence = string_arg(sentence_sexp, "sentence");
+  require_valid_utf8(sentence, "sentence");
+  data_dir = string_arg(data_dir_sexp, "data_dir");
+  mode = string_arg(mode_sexp, "mode");
 
   memset(&options, 0, sizeof(options));
   options.data_dir = data_dir;
   options.output_mode = parse_mode(mode);
 
-  hannanum = hannanum_create(&options);
-  if (hannanum == NULL) {
+  call = (hannanum_call_t *) calloc(1, sizeof(hannanum_call_t));
+  if (call == NULL) {
+    error("failed to initialize HanNanum: out of memory");
+  }
+  holder = PROTECT(R_MakeExternalPtr(call, R_NilValue, R_NilValue));
+  R_RegisterCFinalizerEx(holder, hannanum_call_finalize, TRUE);
+
+  call->hannanum = hannanum_create(&options);
+  if (call->hannanum == NULL) {
     error("failed to initialize HanNanum");
   }
+  hannanum_set_interrupt(call->hannanum, pending_interrupt, &interrupted);
 
-  result = hannanum_analyze(hannanum, sentence);
-  if (result == NULL) {
+  call->result = hannanum_analyze(call->hannanum, sentence);
+  if (call->result == NULL) {
     char message[256];
-    snprintf(message, sizeof(message), "%s", hannanum_error(hannanum));
-    hannanum_destroy(hannanum);
+    snprintf(message, sizeof(message), "%s", hannanum_error(call->hannanum));
+    hannanum_call_release(call);
+    if (interrupted) {
+      error("HanNanum analysis interrupted by user");
+    }
     error("HanNanum analysis failed: %s", message);
   }
 
   if (strcmp(mode, "nouns") == 0) {
-    out = PROTECT(result_to_nouns(result));
+    out = PROTECT(result_to_nouns(call->result));
   } else if (strcmp(mode, "morph") == 0) {
-    out = PROTECT(result_to_candidate_list(result));
+    out = PROTECT(result_to_candidate_list(call->result));
   } else {
-    out = PROTECT(result_to_tag_list(result));
+    out = PROTECT(result_to_tag_list(call->result));
   }
 
-  hannanum_result_destroy(result);
-  hannanum_destroy(hannanum);
-  UNPROTECT(1);
+  hannanum_call_release(call);
+  UNPROTECT(2);
   return out;
 }
