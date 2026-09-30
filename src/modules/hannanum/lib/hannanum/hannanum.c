@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +69,8 @@ enum {
 struct hannanum {
   char *data_dir;
   hannanum_output_mode_t output_mode;
+  hannanum_interrupt_fn interrupt;
+  void *interrupt_userdata;
   char error[256];
   dict_entry_t **dict;
   prob_entry_t **pwt;
@@ -101,6 +104,7 @@ typedef struct {
 typedef struct {
   const eojeol_t *eojeol;
   char phrase[3];
+  size_t phrase_id;
   double wt;
   double score;
   size_t back;

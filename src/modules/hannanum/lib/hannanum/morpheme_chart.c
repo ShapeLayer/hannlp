@@ -762,6 +762,11 @@ morpheme_chart_collect_results_rec(const morpheme_chart_t *chart, int chart_inde
   }
   for (i = 0; i < node->connection_count; i++) {
     int next = node->connection[i];
+    /* The number of chart paths grows exponentially with eojeol length, so
+       enumeration stops once enough candidates have been collected. */
+    if (out->count >= HANNANUM_MAX_EOJEOL_CANDIDATES) {
+      return 1;
+    }
     if (next == 0) {
       eojeol_t eojeol;
       if (!morpheme_chart_node_to_eojeol(chart, path, path_len, &eojeol, tag_names, tag_count)) {

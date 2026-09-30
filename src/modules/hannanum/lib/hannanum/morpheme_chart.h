@@ -23,6 +23,10 @@ along with JHanNanum.  If not, see <http://www.gnu.org/licenses/>   */
 
 #define HANNANUM_MAX_MORPHEME_CONNECTION 30
 #define HANNANUM_MAX_MORPHEME_CHART 2046
+/* Upper bound on candidates enumerated from one eojeol's chart; the number
+   of chart paths grows exponentially with eojeol length. */
+#define HANNANUM_MAX_EOJEOL_CANDIDATES 1024u
+
 #ifndef HANNANUM_NOINLINE
 #if defined(__GNUC__) || defined(__clang__)
 #define HANNANUM_NOINLINE __attribute__((noinline))

@@ -162,6 +162,24 @@ result_to_candidate_list(const hannanum_result_t *result)
   return out;
 }
 
+static void
+check_interrupt_fn(void *unused)
+{
+  (void) unused;
+  R_CheckUserInterrupt();
+}
+
+static int
+pending_interrupt(void *flag)
+{
+  /* R_CheckUserInterrupt() longjmps; run it under R_ToplevelExec so the C
+     library can unwind and free its state before the interrupt is raised. */
+  if (!*(int *) flag && !R_ToplevelExec(check_interrupt_fn, NULL)) {
+    *(int *) flag = 1;
+  }
+  return *(int *) flag;
+}
+
 static const char *
 string_arg(SEXP value, const char *name)
 {

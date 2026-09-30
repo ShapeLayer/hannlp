@@ -82,6 +82,22 @@ hannanum_error(const hannanum_t * hannanum)
   return hannanum != NULL ? hannanum->error : "hannanum context is null";
 }
 
+void
+hannanum_set_interrupt(hannanum_t * h, hannanum_interrupt_fn interrupt, void *userdata)
+{
+  if (h == NULL) {
+    return;
+  }
+  h->interrupt = interrupt;
+  h->interrupt_userdata = userdata;
+}
+
+static int
+hannanum_interrupted(hannanum_t * h)
+{
+  return h->interrupt != NULL && h->interrupt(h->interrupt_userdata);
+}
+
 hannanum_result_t *
 hannanum_analyze(hannanum_t * h, const char *input)
 {
@@ -119,6 +135,18 @@ hannanum_analyze(hannanum_t * h, const char *input)
     return NULL;
   }
   for (i = 0; i < tokens.count; i++) {
+    if (hannanum_interrupted(h)) {
+      size_t done;
+      for (done = 0; done < i; done++) {
+        free_candidate_list(&sets[done]);
+      }
+      free(result);
+      free(sets);
+      free(selected);
+      str_vec_free(&tokens);
+      set_error(h, "analysis interrupted");
+      return NULL;
+    }
     sets[i] = candidates_for(h, tokens.items[i]);
   }
   if (h->output_mode == HANNANUM_OUTPUT_MORPH || h->output_mode == HANNANUM_OUTPUT_MORPH_SIMPLE_09 || h->output_mode == HANNANUM_OUTPUT_MORPH_SIMPLE_22) {
@@ -174,7 +202,7 @@ hannanum_analyze(hannanum_t * h, const char *input)
     free(selected);
     str_vec_free(&tokens);
     free(result);
-    set_error(h, "failed to select best candidate");
+    set_error(h, hannanum_interrupted(h) ? "analysis interrupted" : "failed to select best candidate");
     return NULL;
   }
   result->count = tokens.count;

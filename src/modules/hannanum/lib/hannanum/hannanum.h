@@ -30,6 +30,11 @@ void hannanum_destroy(hannanum_t *hannanum);
 
 const char *hannanum_error(const hannanum_t *hannanum);
 
+/* Polled during long analyses; a non-zero return aborts hannanum_analyze(),
+   which then returns NULL with the error "analysis interrupted". */
+typedef int (*hannanum_interrupt_fn)(void *userdata);
+void hannanum_set_interrupt(hannanum_t *hannanum, hannanum_interrupt_fn interrupt, void *userdata);
+
 hannanum_result_t *hannanum_analyze(hannanum_t *hannanum, const char *input);
 void hannanum_result_destroy(hannanum_result_t *result);
 
