@@ -98,7 +98,7 @@ trim(char *s)
 static int HANNANUM_UNUSED
 starts_with(const char *s, const char *prefix)
 {
-  return strncmp(s, prefix, strlen(prefix)) == 0;
+  return s != NULL && prefix != NULL && strncmp(s, prefix, strlen(prefix)) == 0;
 }
 
 static void HANNANUM_UNUSED

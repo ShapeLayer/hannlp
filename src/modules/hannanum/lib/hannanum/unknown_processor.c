@@ -10,7 +10,7 @@ unknown_processor_expand_list(candidate_list_t *list)
   for (i = 0; i < original_count; i++) {
     size_t j;
     for (j = 0; j < list->items[i].length; j++) {
-      if (strcmp(list->items[i].tags[j], "unk") == 0) {
+      if (list->items[i].tags[j] != NULL && strcmp(list->items[i].tags[j], "unk") == 0) {
         eojeol_t clone = clone_eojeol(&list->items[i]);
         if (clone.length > 0) {
           free(clone.tags[j]);
@@ -21,6 +21,11 @@ unknown_processor_expand_list(candidate_list_t *list)
         }
         free(list->items[i].tags[j]);
         list->items[i].tags[j] = hn_strdup("ncn");
+        if (list->items[i].tags[j] == NULL) {
+          /* A NULL tag would be dereferenced by every later stage. */
+          free_candidate_list(list);
+          return 0;
+        }
       }
     }
   }

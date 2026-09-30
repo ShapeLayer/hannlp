@@ -19,7 +19,7 @@ phrase_tag(const eojeol_t * e, char out[3])
   out[0] = '.';
   out[1] = '.';
   out[2] = '\0';
-  if (e == NULL || e->length == 0 || e->tags[0][0] == '\0') {
+  if (e == NULL || e->length == 0 || e->tags[0] == NULL || e->tags[0][0] == '\0') {
     return;
   }
   first = e->tags[0];
