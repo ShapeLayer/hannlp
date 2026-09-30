@@ -45,6 +45,10 @@ buf_reserve(utf8_buffer_t *buf, size_t extra)
     buf->cap = 64;
   }
   while (buf->cap < needed) {
+    if (buf->cap > (size_t)-1 / 2) {
+      buf->cap = needed;
+      break;
+    }
     buf->cap *= 2;
   }
   next = (char *)realloc(buf->ptr, buf->cap);
