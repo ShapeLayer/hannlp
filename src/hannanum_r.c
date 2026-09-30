@@ -36,8 +36,16 @@ mk_char(const char *value)
 static SEXP
 format_morpheme_tag(const char *morpheme, const char *tag)
 {
-  size_t len = strlen(morpheme) + strlen(tag) + 2;
-  char *buffer = (char *) R_alloc(len, sizeof(char));
+  size_t len;
+  char *buffer;
+  if (morpheme == NULL) {
+    morpheme = "";
+  }
+  if (tag == NULL) {
+    tag = "";
+  }
+  len = strlen(morpheme) + strlen(tag) + 2;
+  buffer = (char *) R_alloc(len, sizeof(char));
   snprintf(buffer, len, "%s/%s", morpheme, tag);
   return mk_char(buffer);
 }
