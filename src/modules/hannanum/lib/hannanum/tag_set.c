@@ -210,6 +210,11 @@ load_tag_set(hannanum_t *h)
       if (name == NULL) {
         continue;
       }
+      if (h->tag_count >= HANNANUM_MAX_TAGS) {
+        /* The connection matrix is tag_count^2 bytes; refuse oversized tag sets. */
+        fclose(fp);
+        return 0;
+      }
       next = (char **)realloc(h->tag_names, (h->tag_count + 1) * sizeof(char *));
       if (next == NULL) {
         fclose(fp);

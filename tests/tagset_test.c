@@ -69,6 +69,7 @@ typedef struct hannanum {
 
 #include "strbuffer.c"
 #include "share.c"
+#include "tag_set.h"
 #include "tag_set.c"
 
 int

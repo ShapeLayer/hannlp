@@ -21,6 +21,9 @@ along with JHanNanum.  If not, see <http://www.gnu.org/licenses/>   */
 #ifndef HANNANUM_TAGSET_H
 #define HANNANUM_TAGSET_H
 
+/* Upper bound on TAG entries; the connection matrix needs tag_count^2 bytes. */
+#define HANNANUM_MAX_TAGS 4096u
+
 static int tag_id(hannanum_t *h, const char *tag);
 static int irregular_id(hannanum_t *h, const char *name);
 static int load_tag_set(hannanum_t *h);
