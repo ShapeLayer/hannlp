@@ -13,8 +13,7 @@ HanNLP is a package designed to eliminate the dependency on rJava and the Java e
 ## Installation
 
 ```R
-install.packages('devtools')
-devtools::install_github('ShapeLayer/HanNLP')
+install.packages('HanNLP')
 ```
 
 Alternatively, you can download this repository and install it by entering the following command in your terminal:
