@@ -758,6 +758,11 @@ morpheme_chart_collect_results_rec(const morpheme_chart_t *chart, int chart_inde
   }
   node = &chart->nodes[chart_index];
   if (chart_index != 0) {
+    /* A path visits each chart node at most once while the connection graph
+       is acyclic; refuse rather than overrun path[] if that ever breaks. */
+    if (path_len >= HANNANUM_MAX_MORPHEME_CHART) {
+      return 0;
+    }
     path[path_len++] = chart_index;
   }
   for (i = 0; i < node->connection_count; i++) {
