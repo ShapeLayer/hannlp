@@ -51,6 +51,7 @@ typedef struct {
   char *name;
   int *ids;
   size_t count;
+  size_t capacity;
 } tag_group_t;
 
 enum {

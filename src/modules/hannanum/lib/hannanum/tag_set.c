@@ -107,8 +107,7 @@ append_tag_or_group(hannanum_t *h, const char *name, int **items, size_t *count,
 static int
 tag_type_add(hannanum_t *h, int type, int tag)
 {
-  size_t capacity = h->tag_types[type].count;
-  return int_list_add_unique(&h->tag_types[type].ids, &h->tag_types[type].count, &capacity, tag);
+  return int_list_add_unique(&h->tag_types[type].ids, &h->tag_types[type].count, &h->tag_types[type].capacity, tag);
 }
 
 static int
@@ -257,6 +256,7 @@ load_tag_set(hannanum_t *h)
       h->tag_groups[h->tag_group_count].name = hn_strdup(name);
       h->tag_groups[h->tag_group_count].ids = ids;
       h->tag_groups[h->tag_group_count].count = count;
+      h->tag_groups[h->tag_group_count].capacity = count;
       if (h->tag_groups[h->tag_group_count].name == NULL) {
         free(ids);
         h->tag_groups[h->tag_group_count].ids = NULL;
@@ -319,5 +319,6 @@ free_tag_set(hannanum_t *h)
     free(h->tag_types[i].ids);
     h->tag_types[i].ids = NULL;
     h->tag_types[i].count = 0;
+    h->tag_types[i].capacity = 0;
   }
 }
