@@ -1,6 +1,7 @@
 .DS_store
 build/
 build-*/
+inst/modules/.hannlp-generated
 
 # check-cran-tarball.sh
 cran-submission/
