@@ -58,7 +58,13 @@ typedef struct morpheme_chart {
   int chi_replacement_count;
   char *eng_replacements[128];
   char *chi_replacements[128];
+  int analyze_depth;
 } morpheme_chart_t;
+
+/* Chart analysis recursion is bounded by the DAG built from INCOMPLETE ->
+   FAIL marking; this explicit cap keeps a future rule that breaks that
+   invariant from exhausting the stack. */
+#define HANNANUM_MAX_ANALYZE_DEPTH (2 * HANNANUM_MAX_MORPHEME_CHART)
 
 static void morpheme_chart_clear(morpheme_chart_t *chart);
 static int morpheme_chart_init(morpheme_chart_t *chart);

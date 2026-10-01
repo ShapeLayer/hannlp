@@ -24,6 +24,7 @@ morpheme_chart_clear(morpheme_chart_t *chart)
   chart->chart_end = 0;
   chart->eng_replacement_count = 0;
   chart->chi_replacement_count = 0;
+  chart->analyze_depth = 0;
 }
 
 static int HANNANUM_UNUSED
@@ -706,7 +707,14 @@ static int
 morpheme_chart_recurse_adapter(hannanum_t *h, morpheme_chart_t *chart, segment_position_t *sp, int chart_index, int next_tag_type, void *userdata)
 {
   morpheme_chart_analyze_context_t *ctx = (morpheme_chart_analyze_context_t *)userdata;
-  return morpheme_chart_analyze_with_callbacks(h, chart, sp, ctx->simti, chart_index, next_tag_type, ctx->expander, ctx->tag_type_check, ctx->connector, ctx->userdata);
+  int result;
+  if (chart->analyze_depth >= HANNANUM_MAX_ANALYZE_DEPTH) {
+    return 0;
+  }
+  chart->analyze_depth++;
+  result = morpheme_chart_analyze_with_callbacks(h, chart, sp, ctx->simti, chart_index, next_tag_type, ctx->expander, ctx->tag_type_check, ctx->connector, ctx->userdata);
+  chart->analyze_depth--;
+  return result;
 }
 
 static int HANNANUM_UNUSED
