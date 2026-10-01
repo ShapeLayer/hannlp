@@ -578,7 +578,9 @@ load_probability(hannanum_t * h, prob_entry_t * *table, const char *relative)
     value_s = trim(value_s);
     errno = 0;
     value = strtod(value_s, &endptr);
-    if (errno == 0 && endptr != value_s) {
+    /* strtod() accepts "nan"/"inf" without setting errno; a non-finite
+       probability would silently break every HMM score comparison. */
+    if (errno == 0 && endptr != value_s && isfinite(value)) {
       prob_put(table, key, value);
     }
   }
