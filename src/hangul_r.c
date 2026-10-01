@@ -569,7 +569,7 @@ hannlp_hangul_to_jamos(SEXP input_sexp)
     }
     p += width;
   }
-  PROTECT(out = mkString(buf.ptr == NULL ? "" : buf.ptr));
+  PROTECT(out = allocVector(STRSXP, 1));
   SET_STRING_ELT(out, 0, mkCharCE(buf.ptr == NULL ? "" : buf.ptr, CE_UTF8));
   free(buf.ptr);
   UNPROTECT(1);
@@ -622,7 +622,7 @@ hannlp_hangul_to_keystrokes(SEXP input_sexp, SEXP fullwidth_sexp)
     }
     p += width;
   }
-  PROTECT(out = mkString(buf.ptr == NULL ? "" : buf.ptr));
+  PROTECT(out = allocVector(STRSXP, 1));
   SET_STRING_ELT(out, 0, mkCharCE(buf.ptr == NULL ? "" : buf.ptr, CE_UTF8));
   free(buf.ptr);
   UNPROTECT(1);
@@ -690,13 +690,13 @@ hannlp_hangul_automata(SEXP input_sexp, SEXP keystroke_sexp, SEXP force_sexp)
     free(automata.output.ptr);
     free(automata.syllables.ptr);
     free(automata.raw.ptr);
-    PROTECT(out = mkString(translateCharUTF8(STRING_ELT(input_sexp, 0))));
+    PROTECT(out = allocVector(STRSXP, 1));
     SET_STRING_ELT(out, 0, mkCharCE(translateCharUTF8(STRING_ELT(input_sexp, 0)), CE_UTF8));
     UNPROTECT(1);
     return out;
   }
 
-  PROTECT(out = mkString(automata.output.ptr == NULL ? "" : automata.output.ptr));
+  PROTECT(out = allocVector(STRSXP, 1));
   SET_STRING_ELT(out, 0, mkCharCE(automata.output.ptr == NULL ? "" : automata.output.ptr, CE_UTF8));
   free(automata.output.ptr);
   free(automata.syllables.ptr);
