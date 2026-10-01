@@ -233,8 +233,10 @@ free_hmm_nodes(hmm_node_t **nodes, size_t count)
   free(nodes);
 }
 
+/* pin_last: the last column is sentence-final punctuation, which is fixed to
+   candidate 0 (it stands for JHanNanum's "SF" sentence end itself). */
 static int
-select_best(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * selected)
+select_best_ex(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * selected, int pin_last)
 {
   hmm_node_t    **nodes;
   size_t         *node_counts;
@@ -320,7 +322,25 @@ select_best(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * sele
     }
   }
   {
+    /* JHanNanum appends an "SF" sentence-end node, runs Viterbi into it and
+       was meant to back-track from it, but starts from candidate 0 of the
+       last eojeol instead (an off-by-one: the end node's back pointer is
+       computed and never read). For a segment that does not end in
+       sentence-final punctuation, back-tracking here starts from that end
+       node, i.e. the last-column node maximising score + transition to "SF"
+       (ties keep the lowest index, as in the forward pass). This
+       intentionally departs from JHanNanum for such segments. */
     size_t          best = 0;
+    size_t          last = count - 1;
+    double          best_score = 0.0;
+    size_t          j;
+    for (j = 0; !pin_last && j < node_counts[last]; j++) {
+      double          score = nodes[last][j].score + wp_transition(h, nodes[last][j].phrase, "SF");
+      if (j == 0 || score > best_score) {
+        best_score = score;
+        best = j;
+      }
+    }
     for (i = count; i > 0; i--) {
       size_t          pos = i - 1;
       selected[pos] = best;
@@ -346,6 +366,12 @@ fail:
   free(group_score);
   free(group_back);
   return 0;
+}
+
+static int
+select_best(hannanum_t * h, candidate_list_t * sets, size_t count, size_t * selected)
+{
+  return select_best_ex(h, sets, count, selected, 0);
 }
 
 static int
@@ -378,6 +404,23 @@ candidate_first_is_single_sentence_final(const candidate_list_t *list)
   return list->items[0].length == 1 && strcmp(list->items[0].tags[0], "sf") == 0;
 }
 
+/* An eojeol such as `다."` or `U.S.` carries its own sentence-final
+   punctuation, so like a bare "." it already stands for the sentence end. */
+static int
+candidate_first_has_sentence_final(const candidate_list_t *list)
+{
+  size_t j;
+  if (list == NULL || list->count == 0) {
+    return 0;
+  }
+  for (j = 0; j < list->items[0].length; j++) {
+    if (list->items[0].tags[j] != NULL && strcmp(list->items[0].tags[j], "sf") == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 static int
 select_best_by_sentence(hannanum_t *h, candidate_list_t *sets, size_t count, size_t *selected)
 {
@@ -385,20 +428,19 @@ select_best_by_sentence(hannanum_t *h, candidate_list_t *sets, size_t count, siz
   size_t i;
   while (start < count) {
     size_t end = start;
+    int ends_with_final = 0;
     while (end < count) {
-      if (candidate_list_is_sentence_final(&sets[end])) {
-        selected[end] = 0;
-        end++;
-        break;
-      }
-      if (candidate_first_is_single_sentence_final(&sets[end])) {
-        selected[end] = 0;
+      if (candidate_list_is_sentence_final(&sets[end]) || candidate_first_is_single_sentence_final(&sets[end])) {
+        ends_with_final = 1;
         end++;
         break;
       }
       end++;
     }
-    if (!select_best(h, sets + start, end - start, selected + start)) {
+    if (!ends_with_final && end > start) {
+      ends_with_final = candidate_first_has_sentence_final(&sets[end - 1]);
+    }
+    if (!select_best_ex(h, sets + start, end - start, selected + start, ends_with_final)) {
       return 0;
     }
     start = end;

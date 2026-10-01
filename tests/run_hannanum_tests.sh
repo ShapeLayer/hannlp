@@ -112,6 +112,11 @@ check_case schedule_sentence_parity "회의 일정은 다음과 같습니다." p
 check_case progressive_sentence_parity "공부를 하고 있다." parity ""
 check_case adjective_past_parity "같았다." parity ""
 check_case copula_sentence_parity "것이다." parity ""
+# parenthesized_company, single_quote_symbol and sentence_remainder
+# intentionally differ from JHanNanum: it never
+# back-tracks from its "SF" sentence-end node, so the last eojeol of a segment
+# without sentence-final punctuation was always candidate 0. The C port uses
+# the end node as intended (see select_best_ex in hmm_pos_tagger.c).
 check_case parenthesized_company_parity "(주)대우" parity ""
 check_case english_phrase_parity "Coex Conference Room" parity ""
 check_case incident_number_parity "10.26사태" parity ""
